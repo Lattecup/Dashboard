@@ -7,6 +7,7 @@ import DeadlinesWidget from '../DeadlinesWidget/DeadlinesWidget';
 import ProblemsTable from '../ProblemsTable/ProblemsTable';
 import StagesTimeline from '../StagesTimeline/StagesTimeline';
 import FileUploader from '../FileUploader/FileUploader';
+import Instructions from '../Instructions/Instructions';
 
 interface IFTStage {
   id: string;
@@ -206,6 +207,8 @@ const Dashboard = () => {
     <div className={styles.dashboard}>
       <h1 className={styles.title}>Cтатистика ИФТ СП3</h1>
       <p className={styles.subtitle}>Загрузите Excel файл</p>
+
+       <Instructions />
 
       <FileUploader onFileLoad={handleFileLoad} fileName={fileName} loading={loading} />
 
