@@ -1,0 +1,126 @@
+.tableContainer {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 24px;
+  overflow-x: auto;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f3f4f6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.filters {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.filterSelect {
+  padding: 8px 12px;
+  font-size: 13px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+}
+
+.clearButton {
+  padding: 6px 12px;
+  font-size: 12px;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.clearButton:hover {
+  background: #e5e7eb;
+}
+
+.activeDeadlineFilter {
+  padding: 6px 12px;
+  font-size: 12px;
+  background: #e0e7ff;
+  border-radius: 8px;
+  color: #3b82f6;
+  font-weight: 500;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table th {
+  text-align: left;
+  padding: 12px 8px;
+  background: #f9fafb;
+  font-weight: 600;
+  color: #4b5563;
+  border-bottom: 2px solid #e5e7eb;
+  cursor: pointer;
+}
+
+.table th:hover {
+  background: #f3f4f6;
+}
+
+.table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.row:hover {
+  background: #f9fafb;
+}
+
+.problemTitle {
+  font-weight: 500;
+}
+
+.overdue {
+  color: #ef4444;
+  font-weight: 500;
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.badgeBlocker {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.badgeCritical {
+  background: #ffedd5;
+  color: #f97316;
+}
+
+.badgeRegular {
+  background: #e0e7ff;
+  color: #4f46e5;
+}
+
+.empty {
+  text-align: center;
+  padding: 40px;
+  color: #9ca3af;
+}

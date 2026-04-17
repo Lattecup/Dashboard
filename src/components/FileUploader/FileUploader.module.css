@@ -1,0 +1,33 @@
+.uploader {
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+
+.button {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  margin-right: 16px;
+}
+
+.button:hover {
+  background: #2563eb;
+}
+
+.button:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+.fileName {
+  color: #10b981;
+  font-size: 14px;
+}
+
+.input {
+  display: none;
+}
