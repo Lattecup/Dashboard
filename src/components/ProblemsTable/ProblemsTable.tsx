@@ -88,7 +88,7 @@ const getPriorityLabel = (priority: string) => {
   return 'Низкий';
 };
 
-const ProblemsTable = ({ problems, processes, deadlineFilter, onClearDeadlineFilter }: ProblemsTableProps) => {
+const ProblemsTable = ({ problems, deadlineFilter, onClearDeadlineFilter }: ProblemsTableProps) => {
   const [filterProcess, setFilterProcess] = useState<string>('all');
   const [filterPriority, setFilterPriority] = useState<string>('all');
   const [filterDeadline, setFilterDeadline] = useState<string>('');
