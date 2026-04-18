@@ -52,20 +52,45 @@ const getProblemDeadlineCategory = (dueDate: string): string => {
   date.setHours(0, 0, 0, 0);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const nextWeek = new Date(today);
-  nextWeek.setDate(today.getDate() + 7);
-  const nextTwoWeeks = new Date(today);
-  nextTwoWeeks.setDate(today.getDate() + 14);
+  
+  const dayOfWeek = today.getDay();
+  const monday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  const startOfThisWeek = new Date(today);
+  startOfThisWeek.setDate(today.getDate() - monday);
+  const endOfThisWeek = new Date(startOfThisWeek);
+  endOfThisWeek.setDate(startOfThisWeek.getDate() + 6);
+  const startOfNextWeek = new Date(startOfThisWeek);
+  startOfNextWeek.setDate(startOfThisWeek.getDate() + 7);
+  const endOfNextWeek = new Date(startOfNextWeek);
+  endOfNextWeek.setDate(startOfNextWeek.getDate() + 6);
   
   if (date < today) return 'overdue';
-  if (date <= nextWeek) return 'thisWeek';
-  if (date <= nextTwoWeeks) return 'nextWeek';
+  if (date >= startOfThisWeek && date <= endOfThisWeek) return 'thisWeek';
+  if (date >= startOfNextWeek && date <= endOfNextWeek) return 'nextWeek';
   return '';
 };
 
-const ProblemsTable = ({ problems, deadlineFilter, onClearDeadlineFilter }: ProblemsTableProps) => {
+const getPriorityBadgeClass = (priority: string) => {
+  const lowerPriority = priority.toLowerCase();
+  if (lowerPriority === 'блокер') return styles.badgeBlocker;
+  if (lowerPriority === 'критичный') return styles.badgeCritical;
+  if (lowerPriority === 'высокий') return styles.badgeHigh;
+  if (lowerPriority === 'средний') return styles.badgeMedium;
+  return styles.badgeLow;
+};
+
+const getPriorityLabel = (priority: string) => {
+  const lowerPriority = priority.toLowerCase();
+  if (lowerPriority === 'блокер') return 'Блокер';
+  if (lowerPriority === 'критичный') return 'Критичный';
+  if (lowerPriority === 'высокий') return 'Высокий';
+  if (lowerPriority === 'средний') return 'Средний';
+  return 'Низкий';
+};
+
+const ProblemsTable = ({ problems, processes, deadlineFilter, onClearDeadlineFilter }: ProblemsTableProps) => {
   const [filterProcess, setFilterProcess] = useState<string>('all');
-  const [filterType, setFilterType] = useState<string>('all');
+  const [filterPriority, setFilterPriority] = useState<string>('all');
   const [filterDeadline, setFilterDeadline] = useState<string>('');
   const [sortField, setSortField] = useState<SortField>('dueDate');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
@@ -74,27 +99,13 @@ const ProblemsTable = ({ problems, deadlineFilter, onClearDeadlineFilter }: Prob
     if (deadlineFilter) setFilterDeadline(deadlineFilter);
   }, [deadlineFilter]);
 
-  const getTypeBadgeClass = (type: string) => {
-    const lowerType = type.toLowerCase();
-    if (lowerType === 'блокер') return styles.badgeBlocker;
-    if (lowerType === 'критичный') return styles.badgeCritical;
-    return styles.badgeRegular;
-  };
-
-  const getTypeLabel = (type: string) => {
-    const lowerType = type.toLowerCase();
-    if (lowerType === 'блокер') return 'Блокер';
-    if (lowerType === 'критичный') return 'Критичный';
-    return 'Обычная';
-  };
-
   const filteredProblems = useMemo(() => {
     let filtered = [...problems];
     if (filterProcess !== 'all') filtered = filtered.filter(p => p.processName === filterProcess);
-    if (filterType !== 'all') filtered = filtered.filter(p => p.type.toLowerCase() === filterType);
+    if (filterPriority !== 'all') filtered = filtered.filter(p => p.type.toLowerCase() === filterPriority);
     if (filterDeadline) filtered = filtered.filter(p => getProblemDeadlineCategory(p.dueDate) === filterDeadline);
     return filtered;
-  }, [problems, filterProcess, filterType, filterDeadline]);
+  }, [problems, filterProcess, filterPriority, filterDeadline]);
 
   const sortedProblems = useMemo(() => {
     const sorted = [...filteredProblems];
@@ -121,21 +132,37 @@ const ProblemsTable = ({ problems, deadlineFilter, onClearDeadlineFilter }: Prob
 
   const getSortIcon = (field: SortField) => {
     if (sortField !== field) {
-      return <span style={{ marginLeft: '6px', opacity: 0.5 }}>↕️</span>;
+      return (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: 'inline-block', marginLeft: '6px', verticalAlign: 'middle', opacity: 0.5 }}>
+          <path d="M7 3v12M7 15l-3-3M7 15l3-3M17 21V9M17 9l-3 3M17 9l3 3" stroke="currentColor" strokeLinecap="round"/>
+        </svg>
+      );
     }
-    return <span style={{ marginLeft: '6px' }}>{sortOrder === 'asc' ? '↑' : '↓'}</span>;
+    if (sortOrder === 'asc') {
+      return (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ display: 'inline-block', marginLeft: '6px', verticalAlign: 'middle', color: '#3b82f6' }}>
+          <path d="M12 5v14M12 5l-4 4M12 5l4 4" stroke="currentColor" strokeLinecap="round"/>
+        </svg>
+      );
+    } else {
+      return (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ display: 'inline-block', marginLeft: '6px', verticalAlign: 'middle', color: '#3b82f6' }}>
+          <path d="M12 19V5M12 19l-4-4M12 19l4-4" stroke="currentColor" strokeLinecap="round"/>
+        </svg>
+      );
+    }
   };
 
   const uniqueProcesses = useMemo(() => [...new Set(problems.map(p => p.processName))], [problems]);
 
   const clearAllFilters = () => {
     setFilterProcess('all');
-    setFilterType('all');
+    setFilterPriority('all');
     setFilterDeadline('');
     if (onClearDeadlineFilter) onClearDeadlineFilter();
   };
 
-  const isFilterActive = filterProcess !== 'all' || filterType !== 'all' || filterDeadline !== '';
+  const isFilterActive = filterProcess !== 'all' || filterPriority !== 'all' || filterDeadline !== '';
 
   if (problems.length === 0) {
     return (
@@ -156,11 +183,13 @@ const ProblemsTable = ({ problems, deadlineFilter, onClearDeadlineFilter }: Prob
             <option value="all">Все процессы</option>
             {uniqueProcesses.map(p => <option key={p} value={p}>{p}</option>)}
           </select>
-          <select className={styles.filterSelect} value={filterType} onChange={(e) => setFilterType(e.target.value)}>
-            <option value="all">Все типы</option>
-            <option value="блокер">Блокеры</option>
-            <option value="критичный">Критичные</option>
-            <option value="обычный">Обычные</option>
+          <select className={styles.filterSelect} value={filterPriority} onChange={(e) => setFilterPriority(e.target.value)}>
+            <option value="all">Все приоритеты</option>
+            <option value="блокер">Блокер</option>
+            <option value="критичный">Критичный</option>
+            <option value="высокий">Высокий</option>
+            <option value="средний">Средний</option>
+            <option value="низкий">Низкий</option>
           </select>
           {filterDeadline && (
             <div className={styles.activeDeadlineFilter}>
@@ -176,7 +205,7 @@ const ProblemsTable = ({ problems, deadlineFilter, onClearDeadlineFilter }: Prob
             <th onClick={() => handleSort('processName')}>Процесс {getSortIcon('processName')}</th>
             <th onClick={() => handleSort('assignee')}>Исполнитель {getSortIcon('assignee')}</th>
             <th onClick={() => handleSort('dueDate')}>Срок {getSortIcon('dueDate')}</th>
-            <th onClick={() => handleSort('type')}>Тип {getSortIcon('type')}</th>
+            <th onClick={() => handleSort('type')}>Приоритет {getSortIcon('type')}</th>
           </tr>
         </thead>
         <tbody>
@@ -188,7 +217,7 @@ const ProblemsTable = ({ problems, deadlineFilter, onClearDeadlineFilter }: Prob
               <td className={isOverdue(problem.dueDate) ? styles.overdue : ''}>
                 {formatDateForDisplay(problem.dueDate)} {isOverdue(problem.dueDate) && '⚠️'}
               </td>
-              <td><span className={`${styles.badge} ${getTypeBadgeClass(problem.type)}`}>{getTypeLabel(problem.type)}</span></td>
+              <td><span className={`${styles.badge} ${getPriorityBadgeClass(problem.type)}`}>{getPriorityLabel(problem.type)}</span></td>
             </tr>
           ))}
         </tbody>

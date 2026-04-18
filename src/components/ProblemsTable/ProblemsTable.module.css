@@ -124,3 +124,18 @@
   padding: 40px;
   color: #9ca3af;
 }
+
+.badgeHigh {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.badgeMedium {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.badgeLow {
+  background: #d1fae5;
+  color: #059669;
+}

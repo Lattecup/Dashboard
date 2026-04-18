@@ -24,14 +24,21 @@ const DeadlinesWidget = ({ problems, onFilterChange, activeFilter }: DeadlinesWi
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
+  // Находим начало текущей недели (понедельник)
   const dayOfWeek = today.getDay();
   const monday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
   const startOfThisWeek = new Date(today);
   startOfThisWeek.setDate(today.getDate() - monday);
   
+  // Конец текущей недели (воскресенье)
+  const endOfThisWeek = new Date(startOfThisWeek);
+  endOfThisWeek.setDate(startOfThisWeek.getDate() + 6);
+  
+  // Начало следующей недели (следующий понедельник)
   const startOfNextWeek = new Date(startOfThisWeek);
   startOfNextWeek.setDate(startOfThisWeek.getDate() + 7);
   
+  // Конец следующей недели (воскресенье)
   const endOfNextWeek = new Date(startOfNextWeek);
   endOfNextWeek.setDate(startOfNextWeek.getDate() + 6);
 
@@ -48,9 +55,11 @@ const DeadlinesWidget = ({ problems, onFilterChange, activeFilter }: DeadlinesWi
     
     if (dueDate < today) {
       overdue++;
-    } else if (dueDate >= startOfThisWeek && dueDate < startOfNextWeek) {
+    } 
+    else if (dueDate >= startOfThisWeek && dueDate <= endOfThisWeek) {
       thisWeek++;
-    } else if (dueDate >= startOfNextWeek && dueDate <= endOfNextWeek) {
+    }
+    else if (dueDate >= startOfNextWeek && dueDate <= endOfNextWeek) {
       nextWeekCount++;
     }
   });

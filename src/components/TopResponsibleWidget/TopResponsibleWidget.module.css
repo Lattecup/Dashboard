@@ -103,3 +103,18 @@
   padding: 40px;
   color: #9ca3af;
 }
+
+.high {
+  color: #d97706;
+  font-weight: 500;
+}
+
+.medium {
+  color: #2563eb;
+  font-weight: 500;
+}
+
+.low {
+  color: #059669;
+  font-weight: 500;
+}

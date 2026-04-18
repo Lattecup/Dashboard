@@ -145,13 +145,11 @@ const StagesTimeline = ({ processes }: StagesTimelineProps) => {
                     <span className={styles.timelineProcess}>{stage.processName}</span>
                     <span className={styles.timelineStage}>— {stage.stageName}</span>
                   </div>
-                  <span className={`${styles.timelineDate} ${styles[stage.status]}`}>
-                    {stage.status === 'overdue' && '⚠️ '}
-                    {formatDateDisplay(stage.dueDate)}
-                    {stage.status === 'overdue' && ' (просрочен)'}
-                    {stage.status === 'thisWeek' && ' (на этой неделе)'}
-                    {stage.status === 'nextWeek' && ' (на следующей)'}
-                  </span>
+<span className={`${styles.timelineDate} ${styles[stage.status]}`}>
+  {stage.status === 'overdue' && '⚠️ '}
+  {formatDateDisplay(stage.dueDate)}
+  {stage.status === 'overdue' && ' Просрочен'}
+</span>
                 </div>
                 <div className={styles.timelineProgress}>
                   <div className={styles.progressBar}>

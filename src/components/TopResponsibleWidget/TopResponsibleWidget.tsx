@@ -20,7 +20,9 @@ interface ResponsibleStats {
   total: number;
   blocker: number;
   critical: number;
-  regular: number;
+  high: number;
+  medium: number;
+  low: number;
 }
 
 const TopResponsibleWidget = ({ problems, limit = 5 }: TopResponsibleWidgetProps) => {
@@ -31,7 +33,7 @@ const TopResponsibleWidget = ({ problems, limit = 5 }: TopResponsibleWidgetProps
     if (!name || name === '') return;
 
     if (!statsMap.has(name)) {
-      statsMap.set(name, { name, total: 0, blocker: 0, critical: 0, regular: 0 });
+      statsMap.set(name, { name, total: 0, blocker: 0, critical: 0, high: 0, medium: 0, low: 0 });
     }
 
     const stats = statsMap.get(name)!;
@@ -40,7 +42,9 @@ const TopResponsibleWidget = ({ problems, limit = 5 }: TopResponsibleWidgetProps
     const type = problem.type.toLowerCase();
     if (type === 'блокер') stats.blocker++;
     else if (type === 'критичный') stats.critical++;
-    else stats.regular++;
+    else if (type === 'высокий') stats.high++;
+    else if (type === 'средний') stats.medium++;
+    else stats.low++;
   });
 
   const sortedStats = Array.from(statsMap.values())
@@ -74,9 +78,11 @@ const TopResponsibleWidget = ({ problems, limit = 5 }: TopResponsibleWidgetProps
               <div className={styles.name}>{person.name}</div>
               <div className={styles.stats}>
                 <span className={styles.total}>📋 Всего: {person.total}</span>
-                {person.blocker > 0 && <span className={styles.blocker}>⚠️ Блокеры: {person.blocker}</span>}
+                {person.blocker > 0 && <span className={styles.blocker}>🔴 Блокеры: {person.blocker}</span>}
                 {person.critical > 0 && <span className={styles.critical}>🟠 Критичные: {person.critical}</span>}
-                {person.regular > 0 && <span className={styles.regular}>📌 Обычные: {person.regular}</span>}
+                {person.high > 0 && <span className={styles.high}>🟡 Высокие: {person.high}</span>}
+                {person.medium > 0 && <span className={styles.medium}>🔵 Средние: {person.medium}</span>}
+                {person.low > 0 && <span className={styles.low}>🟢 Низкие: {person.low}</span>}
               </div>
             </div>
             <div className={styles.badge}>{person.total}</div>
