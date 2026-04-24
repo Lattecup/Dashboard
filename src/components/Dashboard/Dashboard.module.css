@@ -16,44 +16,333 @@
 .subtitle {
   font-size: 16px;
   color: #6b7280;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
-.teamSelector {
+.sectionTitle {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 24px 0 16px;
+}
+
+/* Общая сводка */
+.overallStats {
   background: white;
-  border-radius: 12px;
-  padding: 16px 20px;
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
+  border-radius: 20px;
+  padding: 24px;
+  margin-bottom: 32px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.teamLabel {
-  font-size: 14px;
-  font-weight: 500;
-  color: #4b5563;
+.overallGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 20px;
 }
 
-.teamSelect {
-  padding: 8px 16px;
-  font-size: 14px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+.overallCard {
+  text-align: center;
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 16px;
+}
+
+.overallValue {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #1f2937;
+}
+
+.overallValue.primary {
+  color: #3b82f6;
+}
+
+.overallValue.warning {
+  color: #ef4444;
+}
+
+.overallValue.overdue {
+  color: #f59e0b;
+}
+
+.overallLabel {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* Прогресс по процессам (аккордеон) */
+.processesProgressSection {
   background: white;
-  cursor: pointer;
+  border-radius: 16px;
+  margin-bottom: 32px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 }
 
-.teamSelect:hover {
-  border-color: #3b82f6;
-}
-
-.teamTitle {
-  font-size: 24px;
+.accordionButton {
+  width: 100%;
+  background: white;
+  border: none;
+  padding: 16px 20px;
+  font-size: 16px;
   font-weight: 600;
   color: #1f2937;
-  margin-bottom: 24px;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: background 0.2s;
+}
+
+.accordionButton:hover {
+  background: #f9fafb;
+}
+
+.accordionIcon {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.accordionCount {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 400;
+  color: #9ca3af;
+}
+
+.accordionContent {
+  padding: 0 20px 20px 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.processesProgressList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.processProgressItem {
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 12px;
+}
+
+.processProgressHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.processProgressName {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+  display: block;
+}
+
+.processProgressChain {
+  font-size: 11px;
+  color: #9ca3af;
+  display: block;
+  margin-top: 2px;
+}
+
+.processProgressPercent {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.processProgressPercent.green {
+  color: #10b981;
+}
+
+.processProgressPercent.blue {
+  color: #3b82f6;
+}
+
+.processProgressPercent.yellow {
+  color: #f59e0b;
+}
+
+.processProgressPercent.red {
+  color: #ef4444;
+}
+
+.processProgressBarWrapper {
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.processProgressBarFill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s;
+}
+
+.processProgressBarFill.green {
+  background: #10b981;
+}
+
+.processProgressBarFill.blue {
+  background: #3b82f6;
+}
+
+.processProgressBarFill.yellow {
+  background: #f59e0b;
+}
+
+.processProgressBarFill.red {
+  background: #ef4444;
+}
+
+.processProgressStats {
+  display: flex;
+  gap: 20px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* Список цепочек (карточки) */
+.chainsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.chainCard {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.chainCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.chainName {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 16px;
   padding-bottom: 12px;
-  display: inline-block;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.chainStats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.statItem {
+  text-align: center;
+}
+
+.statValue {
+  font-size: 24px;
+  font-weight: 700;
+  display: block;
+}
+
+.statValue.processes {
+  color: #1f2937;
+}
+
+.statValue.problems {
+  color: #ef4444;
+}
+
+.statValue.completion {
+  color: #3b82f6;
+}
+
+.statValue.overdue {
+  color: #f59e0b;
+}
+
+.statLabel {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.chainFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.chainProgressMini {
+  flex: 1;
+  margin-right: 12px;
+}
+
+.smallProgressBar {
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.smallProgressFill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s;
+}
+
+.smallProgressFill.green {
+  background: #10b981;
+}
+
+.smallProgressFill.blue {
+  background: #3b82f6;
+}
+
+.smallProgressFill.yellow {
+  background: #f59e0b;
+}
+
+.smallProgressFill.red {
+  background: #ef4444;
+}
+
+.detailLink {
+  color: #3b82f6;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.showMoreButton {
+  display: block;
+  width: 100%;
+  margin-top: 20px;
+  padding: 10px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #3b82f6;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.showMoreButton:hover {
+  background: #f3f4f6;
+  border-color: #3b82f6;
 }

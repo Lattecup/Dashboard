@@ -1,237 +1,333 @@
 import { useState } from 'react';
-import * as XLSX from 'xlsx';
 import styles from './Dashboard.module.css';
-import StatsWidget from '../StatsWidget/StatsWidget';
-import TopResponsibleWidget from '../TopResponsibleWidget/TopResponsibleWidget';
-import DeadlinesWidget from '../DeadlinesWidget/DeadlinesWidget';
-import ProblemsTable from '../ProblemsTable/ProblemsTable';
-import StagesTimeline from '../StagesTimeline/StagesTimeline';
 import FileUploader from '../FileUploader/FileUploader';
+import ChainDetail from '../ChainDetail/ChainDetail';
 import Instructions from '../Instructions/Instructions';
-
-interface IFTStage {
-  id: string;
-  name: string;
-  dueDate: string;
-  totalSteps: number;
-  completedSteps: number;
-}
-
-interface Process {
-  id: string;
-  name: string;
-  team: string;
-  iftStages: IFTStage[];
-}
-
-interface Problem {
-  id: string;
-  description: string;
-  processName: string;
-  team: string;
-  assignee: string;
-  dueDate: string;
-  type: string;
-}
-
-const parseExcelDate = (value: string | number | null | undefined): Date | null => {
-  if (!value || value === '') return null;
-  
-  if (typeof value === 'number') {
-    const date = new Date((value - 25569) * 86400 * 1000);
-    if (!isNaN(date.getTime())) return date;
-  }
-  
-  if (typeof value === 'string') {
-    if (value.match(/^\d{2}\.\d{2}\.\d{4}$/)) {
-      const parts = value.split('.');
-      const date = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
-      if (!isNaN(date.getTime())) return date;
-    }
-    if (value.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      const date = new Date(value);
-      if (!isNaN(date.getTime())) return date;
-    }
-  }
-  return null;
-};
-
-const formatDate = (value: string | number | null | undefined): string => {
-  if (!value || value === '') return '';
-  const date = parseExcelDate(value);
-  if (!date) return String(value);
-  return date.toLocaleDateString('ru-RU');
-};
-
-const getDateNumber = (value: string | number | null | undefined): number | null => {
-  if (!value || value === '') return null;
-  if (typeof value === 'number') return value;
-  if (typeof value === 'string' && /^\d+$/.test(value)) return parseInt(value);
-  const date = parseExcelDate(value);
-  if (date) return Math.floor(date.getTime() / (86400 * 1000)) + 25569;
-  return null;
-};
-
-const getIftStagesWithoutDate = (processes: Process[]) => {
-  let count = 0;
-  processes.forEach(process => {
-    process.iftStages.forEach(stage => {
-      if (!stage.dueDate || stage.dueDate === '' || String(stage.dueDate).toLowerCase() === 'tbd') {
-        count++;
-      }
-    });
-  });
-  return count;
-};
+import type { Chain, ChainSummary } from '../../types/chain.types';
+import { parseExcelFile } from '../utils/excelParser';
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(false);
   const [fileName, setFileName] = useState('');
-  const [allTeamsData, setAllTeamsData] = useState<Map<string, { processes: Process[], problems: Problem[] }>>(new Map());
-  const [selectedTeam, setSelectedTeam] = useState<string>('');
-  const [deadlineFilter, setDeadlineFilter] = useState<string>('');
-  
-  const processes = selectedTeam && allTeamsData.get(selectedTeam)?.processes || [];
-  const problems = selectedTeam && allTeamsData.get(selectedTeam)?.problems || [];
+  const [chains, setChains] = useState<Chain[]>([]);
+  const [selectedChainId, setSelectedChainId] = useState<string | null>(null);
+  const [showProcessesProgress, setShowProcessesProgress] = useState(false);
+  const [showAllProcesses, setShowAllProcesses] = useState(false);
 
   const handleFileLoad = async (file: File) => {
     setLoading(true);
     setFileName(file.name);
-
-    const reader = new FileReader();
-
-    reader.onload = (e) => {
-      const arrayBuffer = e.target?.result as ArrayBuffer;
-      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-      const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
-      
-      if (rawData.length === 0) return;
-      const headers = rawData[0];
-      
-      const getColIndex = (possibleNames: string[]) => {
-        for (let i = 0; i < headers.length; i++) {
-          const header = String(headers[i]).trim();
-          if (possibleNames.some(name => header === name)) return i;
-        }
-        return -1;
-      };
-      
-      const teamIdx = getColIndex(['Команда']);
-      const processIdx = getColIndex(['Сквозной процесс']);
-      const stageIdx = getColIndex(['Этап ИФТ']);
-      const stageDueIdx = getColIndex(['Срок этапа', 'Срок']);
-      const totalStepsIdx = getColIndex(['Шагов всего']);
-      const completedStepsIdx = getColIndex(['Шагов выполнено']);
-      const problemIdx = getColIndex(['Проблема']);
-      const assigneeIdx = getColIndex(['Исполнитель']);
-      const problemDueIdx = getColIndex(['Срок проблемы', 'Срок']);
-      const problemTypeIdx = getColIndex(['Тип проблемы']);
-      
-      const teamsMap = new Map<string, { processes: Process[], problems: Problem[] }>();
-      
-      for (let i = 1; i < rawData.length; i++) {
-        const row = rawData[i];
-        const team = teamIdx !== -1 ? String(row[teamIdx] || '') : 'Без команды';
-        const processName = processIdx !== -1 ? String(row[processIdx] || '') : '';
-        const stageName = stageIdx !== -1 ? String(row[stageIdx] || '') : '';
-        const stageDueValue = stageDueIdx !== -1 ? row[stageDueIdx] : '';
-        const totalSteps = totalStepsIdx !== -1 ? Number(row[totalStepsIdx]) || 0 : 0;
-        const completedSteps = completedStepsIdx !== -1 ? Number(row[completedStepsIdx]) || 0 : 0;
-        const problemDesc = problemIdx !== -1 ? String(row[problemIdx] || '') : '';
-        const assignee = assigneeIdx !== -1 ? String(row[assigneeIdx] || '') : '';
-        const problemDueValue = problemDueIdx !== -1 ? row[problemDueIdx] : '';
-        const problemType = problemTypeIdx !== -1 ? String(row[problemTypeIdx] || '') : '';
-        
-        if (!team || team === '' || team === 'undefined') continue;
-        if (!processName || processName === '') continue;
-        
-        if (!teamsMap.has(team)) teamsMap.set(team, { processes: [], problems: [] });
-        const teamData = teamsMap.get(team)!;
-        
-        const existingProcess = teamData.processes.find(p => p.name === processName);
-        if (existingProcess) {
-          existingProcess.iftStages.push({
-            id: `${team}_${processName}_${stageName}_${i}`,
-            name: stageName,
-            dueDate: formatDate(stageDueValue),
-            totalSteps: totalSteps,
-            completedSteps: completedSteps
-          });
-        } else {
-          teamData.processes.push({
-            id: `${team}_${processName}`,
-            name: processName,
-            team: team,
-            iftStages: [{
-              id: `${team}_${processName}_${stageName}_${i}`,
-              name: stageName,
-              dueDate: formatDate(stageDueValue),
-              totalSteps: totalSteps,
-              completedSteps: completedSteps
-            }]
-          });
-        }
-        
-        if (problemDesc && problemDesc !== '' && problemDesc !== '-' && problemDesc !== '—') {
-          teamData.problems.push({
-            id: `problem_${i}`,
-            description: problemDesc,
-            processName: processName,
-            team: team,
-            assignee: assignee || 'Не указан',
-            dueDate: getDateNumber(problemDueValue)?.toString() || '',
-            type: problemType ? problemType.toLowerCase() : 'обычный'
-          });
-        }
-      }
-      
-      setAllTeamsData(teamsMap);
-      const firstTeam = Array.from(teamsMap.keys())[0];
-      setSelectedTeam(firstTeam);
+    
+    try {
+      const parsedChains = await parseExcelFile(file);
+      setChains(parsedChains);
+    } catch (error) {
+      console.error('Ошибка при парсинге:', error);
+    } finally {
       setLoading(false);
-    };
-
-    reader.readAsArrayBuffer(file);
+    }
   };
 
-  const totalProblems = problems.length;
-  const blockersAndCritical = problems.filter(p => {
-    const type = p.type.toLowerCase();
-    return type === 'блокер' || type === 'критичный';
-  }).length;
-  const iftStagesWithoutDate = getIftStagesWithoutDate(processes);
-  const teams = Array.from(allTeamsData.keys());
+  const calculateSummary = (): ChainSummary[] => {
+    return chains.map(chain => {
+      let totalProcesses = chain.processes.length;
+      let totalProblems = chain.processes.reduce((acc, p) => acc + p.problems.length, 0);
+      let totalCompletion = 0;
+      let totalStages = 0;
+      let overdueStages = 0;
+      
+      chain.processes.forEach(process => {
+        process.iftStages.forEach(stage => {
+          const hasData = stage.description || 
+                          (stage.startDate && stage.startDate !== '') || 
+                          (stage.endDate && stage.endDate !== '') ||
+                          stage.totalSteps > 0;
+          
+          if (!hasData) return;
+          
+          const hasSteps = stage.totalSteps > 0;
+          
+          if (hasSteps) {
+            const percentage = stage.percentage > 1 ? stage.percentage / 100 : stage.percentage;
+            totalCompletion += percentage;
+            totalStages++;
+          }
+          
+          const endDate = new Date(stage.endDate);
+          if (!isNaN(endDate.getTime()) && endDate < new Date() && stage.percentage < 100) {
+            overdueStages++;
+          }
+        });
+      });
+      
+      return {
+        id: chain.id,
+        name: chain.name,
+        totalProcesses,
+        totalProblems,
+        avgCompletion: totalStages > 0 ? (totalCompletion / totalStages) * 100 : 0,
+        overdueStages
+      };
+    });
+  };
+
+  const getAllProcesses = () => {
+    const allProcesses: { name: string; chainName: string; percentage: number; problems: number; stages: number }[] = [];
+    
+    chains.forEach(chain => {
+      chain.processes.forEach(process => {
+        let totalCompletion = 0;
+        let totalStages = 0;
+        process.iftStages.forEach(stage => {
+          const hasData = stage.description || 
+                          (stage.startDate && stage.startDate !== '') || 
+                          (stage.endDate && stage.endDate !== '') ||
+                          stage.totalSteps > 0;
+          
+          if (!hasData) return;
+          
+          const hasSteps = stage.totalSteps > 0;
+          if (hasSteps) {
+            const percentage = stage.percentage > 1 ? stage.percentage / 100 : stage.percentage;
+            totalCompletion += percentage;
+            totalStages++;
+          }
+        });
+        const avgCompletion = totalStages > 0 ? (totalCompletion / totalStages) * 100 : 0;
+        
+        allProcesses.push({
+          name: process.name,
+          chainName: chain.name,
+          percentage: avgCompletion,
+          problems: process.problems.length,
+          stages: totalStages
+        });
+      });
+    });
+    
+    return allProcesses.sort((a, b) => b.percentage - a.percentage);
+  };
+
+  const getPercentColor = (percentage: number) => {
+    if (percentage >= 80) return 'green';
+    if (percentage >= 50) return 'blue';
+    if (percentage >= 25) return 'yellow';
+    return 'red';
+  };
+
+  const getOverallStats = () => {
+    if (chains.length === 0) return null;
+    
+    let totalChains = chains.length;
+    let totalProcesses = 0;
+    let totalProblems = 0;
+    let totalCompletion = 0;
+    let totalStages = 0;
+    let totalOverdue = 0;
+    
+    chains.forEach(chain => {
+      totalProcesses += chain.processes.length;
+      totalProblems += chain.processes.reduce((acc, p) => acc + p.problems.length, 0);
+      
+      chain.processes.forEach(process => {
+        process.iftStages.forEach(stage => {
+          const hasData = stage.description || 
+                          (stage.startDate && stage.startDate !== '') || 
+                          (stage.endDate && stage.endDate !== '') ||
+                          stage.totalSteps > 0;
+          
+          if (!hasData) return;
+          
+          const hasSteps = stage.totalSteps > 0;
+          if (hasSteps) {
+            const percentage = stage.percentage > 1 ? stage.percentage / 100 : stage.percentage;
+            totalCompletion += percentage;
+            totalStages++;
+          }
+          
+          const endDate = new Date(stage.endDate);
+          if (!isNaN(endDate.getTime()) && endDate < new Date() && stage.percentage < 100) {
+            totalOverdue++;
+          }
+        });
+      });
+    });
+    
+    return {
+      totalChains,
+      totalProcesses,
+      totalProblems,
+      avgCompletion: totalStages > 0 ? (totalCompletion / totalStages) * 100 : 0,
+      totalOverdue
+    };
+  };
+
+  const summaries = calculateSummary();
+  const overall = getOverallStats();
+  const allProcesses = getAllProcesses();
+  const displayedProcesses = showAllProcesses ? allProcesses : allProcesses.slice(0, 4);
+  const hasMoreProcesses = allProcesses.length > 4;
+
+  const getProcessWord = (count: number) => {
+    if (count % 10 === 1 && count % 100 !== 11) return 'процесс';
+    if (count % 10 >= 2 && count % 10 <= 4 && (count % 100 < 10 || count % 100 >= 20)) return 'процесса';
+    return 'процессов';
+  };
+
+  if (selectedChainId) {
+    const selectedChain = chains.find(c => c.id === selectedChainId);
+    if (selectedChain) {
+      return (
+        <ChainDetail 
+          chain={selectedChain} 
+          onBack={() => setSelectedChainId(null)} 
+        />
+      );
+    }
+  }
 
   return (
     <div className={styles.dashboard}>
-      <h1 className={styles.title}>Cтатистика ИФТ СП3</h1>
-      <p className={styles.subtitle}>Загрузите Excel файл</p>
+      <h1 className={styles.title}>📊 Статус ИФТ</h1>
+      <p className={styles.subtitle}>Загрузите Excel файл с данными по сквозным цепочкам</p>
 
-       <Instructions />
+      <Instructions />
 
-      <FileUploader onFileLoad={handleFileLoad} fileName={fileName} loading={loading} />
+      <FileUploader 
+        onFileLoad={handleFileLoad} 
+        fileName={fileName} 
+        loading={loading} 
+      />
 
-      {teams.length > 0 && (
+      {chains.length > 0 && (
         <>
-          <div className={styles.teamSelector}>
-            <label className={styles.teamLabel}>Команда:</label>
-            <select className={styles.teamSelect} value={selectedTeam} onChange={(e) => setSelectedTeam(e.target.value)}>
-              {teams.map(team => <option key={team} value={team}>{team}</option>)}
-            </select>
+          {overall && (
+            <div className={styles.overallStats}>
+              <h2 className={styles.sectionTitle}>📊 Общая сводка</h2>
+              <div className={styles.overallGrid}>
+                <div className={styles.overallCard}>
+                  <div className={`${styles.overallValue} ${styles.primary}`}>{overall.totalChains}</div>
+                  <div className={styles.overallLabel}>📌 Всего цепочек</div>
+                </div>
+                <div className={styles.overallCard}>
+                  <div className={styles.overallValue}>{overall.totalProcesses}</div>
+                  <div className={styles.overallLabel}>📋 Всего процессов</div>
+                </div>
+                <div className={styles.overallCard}>
+                  <div className={`${styles.overallValue} ${styles.warning}`}>{overall.totalProblems}</div>
+                  <div className={styles.overallLabel}>⚠️ Всего проблем</div>
+                </div>
+                <div className={styles.overallCard}>
+                  <div className={`${styles.overallValue} ${styles.primary}`}>{Math.round(overall.avgCompletion)}%</div>
+                  <div className={styles.overallLabel}>📈 Общая готовность</div>
+                </div>
+                <div className={styles.overallCard}>
+                  <div className={`${styles.overallValue} ${styles.overdue}`}>{overall.totalOverdue}</div>
+                  <div className={styles.overallLabel}>⏰ Просроченных этапов</div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <div className={styles.processesProgressSection}>
+            <button 
+              className={styles.accordionButton}
+              onClick={() => setShowProcessesProgress(!showProcessesProgress)}
+            >
+              <span className={styles.accordionIcon}>{showProcessesProgress ? '▼' : '▶'}</span>
+              📈 Прогресс по процессам
+              <span className={styles.accordionCount}>
+                {allProcesses.length} {getProcessWord(allProcesses.length)}
+              </span>
+            </button>
+            
+            {showProcessesProgress && (
+              <div className={styles.accordionContent}>
+                <div className={styles.processesProgressList}>
+                  {displayedProcesses.map((process, idx) => {
+                    const percentColor = getPercentColor(process.percentage);
+                    return (
+                      <div key={idx} className={styles.processProgressItem}>
+                        <div className={styles.processProgressHeader}>
+                          <div>
+                            <span className={styles.processProgressName}>{process.name}</span>
+                            <span className={styles.processProgressChain}>{process.chainName}</span>
+                          </div>
+                          <span className={`${styles.processProgressPercent} ${styles[percentColor]}`}>
+                            {Math.round(process.percentage)}%
+                          </span>
+                        </div>
+                        <div className={styles.processProgressBarWrapper}>
+                          <div 
+                            className={`${styles.processProgressBarFill} ${styles[percentColor]}`}
+                            style={{ width: `${process.percentage}%` }}
+                          />
+                        </div>
+                        <div className={styles.processProgressStats}>
+                          <span>📋 {process.stages} этапов</span>
+                          <span>⚠️ {process.problems} проблем</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                {hasMoreProcesses && (
+                  <button 
+                    className={styles.showMoreButton}
+                    onClick={() => setShowAllProcesses(!showAllProcesses)}
+                  >
+                    {showAllProcesses ? '▲ Показать меньше' : '▼ Показать ещё'}
+                  </button>
+                )}
+              </div>
+            )}
           </div>
-
-          <h2 className={styles.teamTitle}>👥 {selectedTeam}</h2>
-
-          <StatsWidget totalProblems={totalProblems} blockersAndCritical={blockersAndCritical} iftStagesWithoutDate={iftStagesWithoutDate} />
-
-          <StagesTimeline processes={processes} />
-
-          <DeadlinesWidget problems={problems} onFilterChange={setDeadlineFilter} activeFilter={deadlineFilter} />
-
-          <ProblemsTable problems={problems} processes={processes.map(p => ({ id: p.id, name: p.name }))} deadlineFilter={deadlineFilter} onClearDeadlineFilter={() => setDeadlineFilter('')} />
-
-          <TopResponsibleWidget problems={problems} limit={5} />
+          
+          <h2 className={styles.sectionTitle}>📋 Список цепочек</h2>
+          <div className={styles.chainsGrid}>
+            {summaries.map(summary => {
+              const percentColor = getPercentColor(summary.avgCompletion);
+              return (
+                <div 
+                  key={summary.id} 
+                  className={styles.chainCard}
+                  onClick={() => setSelectedChainId(summary.id)}
+                >
+                  <div className={styles.chainName}>{summary.name}</div>
+                  <div className={styles.chainStats}>
+                    <div className={styles.statItem}>
+                      <span className={`${styles.statValue} ${styles.processes}`}>{summary.totalProcesses}</span>
+                      <span className={styles.statLabel}>Процессов</span>
+                    </div>
+                    <div className={styles.statItem}>
+                      <span className={`${styles.statValue} ${styles.problems}`}>{summary.totalProblems}</span>
+                      <span className={styles.statLabel}>Проблем</span>
+                    </div>
+                    <div className={styles.statItem}>
+                      <span className={`${styles.statValue} ${styles.completion}`}>{Math.round(summary.avgCompletion)}%</span>
+                      <span className={styles.statLabel}>Готовность</span>
+                    </div>
+                    <div className={styles.statItem}>
+                      <span className={`${styles.statValue} ${styles.overdue}`}>{summary.overdueStages}</span>
+                      <span className={styles.statLabel}>Просрочено</span>
+                    </div>
+                  </div>
+                  <div className={styles.chainFooter}>
+                    <div className={styles.chainProgressMini}>
+                      <div className={styles.smallProgressBar}>
+                        <div 
+                          className={`${styles.smallProgressFill} ${styles[percentColor]}`}
+                          style={{ width: `${summary.avgCompletion}%` }}
+                        />
+                      </div>
+                    </div>
+                    <span className={styles.detailLink}>Подробнее →</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </>
       )}
     </div>

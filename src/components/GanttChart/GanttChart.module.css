@@ -1,0 +1,323 @@
+.widget {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 24px;
+  overflow: visible;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.scrollContainer {
+  overflow-x: auto;
+  overflow-y: visible;
+  margin: 0 -20px;
+  padding: 0 20px;
+}
+
+@media (min-width: 1200px) {
+  .scrollContainer {
+    overflow-x: visible;
+  }
+}
+
+.ganttContainer {
+  min-width: 800px;
+  position: relative;
+  padding: 0 20px;
+}
+
+.monthsScale {
+  position: relative;
+  height: 30px;
+  margin-bottom: 40px;
+  margin-left: 160px;
+  width: calc(100% - 160px);
+  overflow: visible;
+}
+
+.timelineLine {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 30px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.monthMark {
+  position: absolute;
+  transform: translateX(-50%);
+  font-size: 10px;
+  color: #9ca3af;
+  white-space: nowrap;
+  bottom: -20px;
+  background: white;
+  padding: 0 4px;
+}
+
+.datesContainer {
+  position: relative;
+  margin-bottom: 10px;
+  margin-left: 160px;
+  width: calc(100% - 160px);
+  overflow: visible;
+  min-height: 60px;
+}
+
+.datesRow {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 28px;
+  overflow: visible;
+}
+
+.dateMarker {
+  position: absolute;
+  transform: translateX(-50%);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.dateDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin: 0 auto 3px;
+}
+
+.dateLabel {
+  font-size: 8px;
+  font-weight: 600;
+  background: white;
+  padding: 1px 4px;
+  border-radius: 10px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  margin-top: 20px;
+  position: relative;
+}
+
+.row {
+  display: flex;
+  align-items: flex-start;
+  padding: 12px 0;
+  border-bottom: 1px solid #f3f4f6;
+  position: relative;
+}
+
+.row:hover {
+  background: #f9fafb;
+}
+
+.rowName {
+  width: 160px;
+  flex-shrink: 0;
+  padding-right: 12px;
+}
+
+.processName {
+  font-size: 11px;
+  font-weight: 500;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.stageStats {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.rowTimeline {
+  flex: 1;
+  position: relative;
+  min-height: auto;
+  padding-right: 12px;
+}
+
+.barTrack {
+  position: absolute;
+  top: 0;
+  height: 24px;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.barTrack.normalDates {
+  background: #f3f4f6;
+}
+
+.barTrack.noDates {
+  background: #fef3c7;
+}
+
+.barTrack.noStartDate {
+  background: #ffedd5;
+}
+
+.barTrack.noEndDate {
+  background: #dbeafe;
+}
+
+.barTrack.tbdProgress {
+  background: #f3e8ff;
+}
+
+.fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: #34d399;
+  border-radius: 12px;
+  transition: width 0.3s;
+}
+
+.percentLabel {
+  position: relative;
+  z-index: 2;
+  font-size: 10px;
+  font-weight: 600;
+  color: #1f2937;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 0 4px;
+  border-radius: 10px;
+}
+
+.todayLineGlobal {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: repeating-linear-gradient(
+    to bottom,
+    #ef4444,
+    #ef4444 8px,
+    transparent 8px,
+    transparent 16px
+  );
+  z-index: 10;
+  pointer-events: none;
+}
+
+.stageInfo {
+  position: relative;
+  top: auto;
+  left: 0;
+  margin-top: 28px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.stageBadgeSmall {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  color: white;
+}
+
+.stageDescriptionSmall {
+  font-size: 11px;
+  color: #4b5563;
+  line-height: 1.3;
+  word-break: break-word;
+  font-weight: normal;
+}
+
+.warnings {
+  position: relative;
+  top: auto;
+  left: 0;
+  margin-top: 4px;
+}
+
+.warningDate {
+  font-size: 9px;
+  color: #f59e0b;
+}
+
+.warningOverdue {
+  font-size: 9px;
+  color: #ef4444;
+  font-weight: 500;
+}
+
+.showMoreButton {
+  display: block;
+  width: 100%;
+  margin-top: 20px;
+  padding: 10px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #3b82f6;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.showMoreButton:hover {
+  background: #f3f4f6;
+  border-color: #3b82f6;
+}
+
+.empty {
+  text-align: center;
+  padding: 40px;
+  color: #9ca3af;
+}
+
+/* Маркер "Сегодня" на шкале месяцев */
+.todayMarker {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+}
+
+.todayLabel {
+  font-size: 10px;
+  font-weight: 600;
+  color: #ef4444;
+  background: white;
+  padding: 2px 6px;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+  border: 1px solid #ef4444;
+  margin-bottom: 4px;
+}
+
+.todayArrow {
+  font-size: 10px;
+  color: #ef4444;
+  line-height: 1;
+  margin-bottom: -2px;
+}

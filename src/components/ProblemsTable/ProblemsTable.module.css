@@ -21,6 +21,12 @@
   gap: 16px;
 }
 
+.titleRight {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
 .filters {
   display: flex;
   gap: 12px;
@@ -36,26 +42,28 @@
   cursor: pointer;
 }
 
-.clearButton {
-  padding: 6px 12px;
-  font-size: 12px;
+.filterSelect:hover {
+  border-color: #3b82f6;
+}
+
+.sberChatButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
   background: #f3f4f6;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.clearButton:hover {
-  background: #e5e7eb;
-}
-
-.activeDeadlineFilter {
-  padding: 6px 12px;
-  font-size: 12px;
-  background: #e0e7ff;
-  border-radius: 8px;
   color: #3b82f6;
+  text-decoration: none;
+  border-radius: 8px;
+  font-size: 13px;
   font-weight: 500;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.sberChatButton:hover {
+  background: #e5e7eb;
+  color: #2563eb;
 }
 
 .table {
@@ -79,44 +87,38 @@
 }
 
 .table td {
-  padding: 10px 8px;
+  padding: 12px 8px;
   border-bottom: 1px solid #f3f4f6;
+  vertical-align: top;
 }
 
 .row:hover {
   background: #f9fafb;
 }
 
-.problemTitle {
-  font-weight: 500;
+.problemCell {
+  max-width: 500px;
 }
 
-.overdue {
-  color: #ef4444;
+.problemText {
   font-weight: 500;
+  color: #1f2937;
+  margin-bottom: 4px;
 }
 
-.badge {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 12px;
+.problemMeta {
+  display: flex;
+  gap: 12px;
   font-size: 11px;
-  font-weight: 500;
+  color: #9ca3af;
 }
 
-.badgeBlocker {
-  background: #fee2e2;
-  color: #dc2626;
+.assignee {
+  color: #6b7280;
 }
 
-.badgeCritical {
-  background: #ffedd5;
-  color: #f97316;
-}
-
-.badgeRegular {
-  background: #e0e7ff;
-  color: #4f46e5;
+.dueDate {
+  color: #f59e0b;
 }
 
 .empty {
@@ -125,17 +127,9 @@
   color: #9ca3af;
 }
 
-.badgeHigh {
-  background: #fef3c7;
-  color: #d97706;
-}
-
-.badgeMedium {
-  background: #dbeafe;
-  color: #2563eb;
-}
-
-.badgeLow {
-  background: #d1fae5;
-  color: #059669;
+/* Предупреждение о датах */
+.warningDate {
+  font-size: 9px;
+  color: #f59e0b;
+  margin-top: 2px;
 }
