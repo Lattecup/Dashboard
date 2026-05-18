@@ -115,12 +115,16 @@ const ProcessStagesWidget = ({ processes, selectedProcess = 'all' }: GanttChartP
     maxDateTime = now + 30 * 24 * 3600 * 1000;
   }
   
-  const startDate = new Date(minDateTime);
-  const endDate = new Date(maxDateTime);
-  
-  const padding = hasUnfinishedStages ? 14 : 0;
-  startDate.setDate(startDate.getDate() - padding);
-  endDate.setDate(endDate.getDate() + padding);
+const startDate = new Date(minDateTime);
+const endDate = new Date(maxDateTime);
+
+// Округляем до начала месяца минимальной даты
+const minDate = new Date(minDateTime);
+startDate.setFullYear(minDate.getFullYear(), minDate.getMonth(), 1);
+
+// Округляем до конца месяца максимальной даты
+const maxDate = new Date(maxDateTime);
+endDate.setFullYear(maxDate.getFullYear(), maxDate.getMonth() + 1, 0);
   
   const totalDays = (endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24);
   
