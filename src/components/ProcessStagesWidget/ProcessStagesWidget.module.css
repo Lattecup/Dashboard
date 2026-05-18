@@ -1,0 +1,240 @@
+.widget {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 24px;
+  overflow: visible;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.scrollContainer {
+  overflow-x: auto;
+  overflow-y: visible;
+  margin: 0 -20px;
+  padding: 0 20px;
+}
+
+@media (min-width: 1200px) {
+  .scrollContainer {
+    overflow-x: visible;
+  }
+}
+
+.ganttContainer {
+  min-width: 800px;
+  position: relative;
+  padding: 0 20px;
+}
+
+.monthsScale {
+  position: relative;
+  height: 30px;
+  margin-bottom: 35px;
+  margin-left: 160px;
+  width: calc(100% - 160px);
+  overflow: visible;
+}
+
+.timelineLine {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 30px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.monthMark {
+  position: absolute;
+  transform: translateX(-50%);
+  font-size: 10px;
+  color: #9ca3af;
+  white-space: nowrap;
+  bottom: -20px;
+  background: white;
+  padding: 0 4px;
+}
+
+.todayMarker {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+}
+
+.todayLabel {
+  font-size: 10px;
+  font-weight: 600;
+  color: #ef4444;
+  background: white;
+  padding: 2px 6px;
+  border-radius: 12px;
+  border: 1px solid #ef4444;
+  white-space: nowrap;
+  margin-bottom: 2px;
+}
+
+.todayArrow {
+  font-size: 10px;
+  color: #ef4444;
+  line-height: 1;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  margin-top: 20px;
+  position: relative;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  padding: 20px 0 5px 0;
+  border-bottom: 1px solid #f3f4f6;
+  position: relative;
+  min-height: 80px;
+}
+
+.row:hover {
+  background: #f9fafb;
+}
+
+.rowName {
+  width: 160px;
+  flex-shrink: 0;
+  padding-right: 12px;
+}
+
+.processName {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1f2937;
+  line-height: 1.3;
+}
+
+.rowTimeline {
+  flex: 1;
+  position: relative;
+  min-height: 60px;
+}
+
+.stageWrapper {
+  position: relative;
+  margin-bottom: 15px;
+  min-height: 32px;
+}
+
+.stageWrapper:last-child {
+  margin-bottom: 0;
+}
+
+/* Описание НАД полоской */
+.stageDescriptionAbove {
+  position: absolute;
+  left: 0;
+  bottom: 34px;
+  font-size: 11px;
+  font-weight: 400;
+  color: #6b7280;
+  white-space: nowrap;
+  background: transparent;
+  padding: 0;
+  z-index: 5;
+}
+
+.barTrack {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 24px;
+  border-radius: 12px;
+  overflow: visible;
+  background: #e5e7eb;
+  display: flex;
+  align-items: center;
+}
+
+.fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: #34d399;
+  transition: width 0.3s;
+  border-radius: 12px 0 0 12px;
+}
+
+.fillFull {
+  border-radius: 12px !important;
+}
+
+.stageContent {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #1f2937;
+  background: rgba(255, 255, 255, 0.85);
+  padding: 2px 8px;
+  border-radius: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+  margin-left: 6px;
+}
+
+.percentLabel {
+  color: #1f2937;
+}
+
+.stepsLabel {
+  font-weight: 600;
+}
+
+.dateLabel {
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.showMoreButton {
+  display: block;
+  width: 100%;
+  margin-top: 20px;
+  padding: 10px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #3b82f6;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.showMoreButton:hover {
+  background: #f3f4f6;
+  border-color: #3b82f6;
+}
+
+.empty {
+  text-align: center;
+  padding: 40px;
+  color: #9ca3af;
+}

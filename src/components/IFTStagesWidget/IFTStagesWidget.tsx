@@ -1,3 +1,4 @@
+/*
 import { useState, useEffect } from 'react';
 import styles from './IFTStagesWidget.module.css';
 import type { IFTStage } from '../../types/chain.types';
@@ -124,3 +125,4 @@ const IFTStagesWidget = ({ stages }: IFTStagesWidgetProps) => {
 };
 
 export default IFTStagesWidget;
+*/

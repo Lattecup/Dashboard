@@ -7,6 +7,14 @@ interface StatsWidgetProps {
 }
 
 const StatsWidget = ({ stats, nearestDeadline }: StatsWidgetProps) => {
+  // Функция для скролла к списку проблем
+  const scrollToProblems = () => {
+    const problemsSection = document.getElementById('problems-section');
+    if (problemsSection) {
+      problemsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   return (
     <div className={styles.widget}>
       <h3 className={styles.title}>📊 Ключевые показатели</h3>
@@ -15,10 +23,17 @@ const StatsWidget = ({ stats, nearestDeadline }: StatsWidgetProps) => {
           <div className={styles.value}>{stats.totalProcesses}</div>
           <div className={styles.label}>📋 Всего процессов</div>
         </div>
-        <div className={`${styles.card} ${styles.critical}`}>
+        
+        {/* ТОЛЬКО ЭТОТ БЛОК ИЗМЕНИЛ — добавил onClick и cursor */}
+        <div 
+          className={`${styles.card} ${styles.critical}`}
+          onClick={scrollToProblems}
+          style={{ cursor: 'pointer' }}
+        >
           <div className={styles.value}>{stats.totalProblems}</div>
           <div className={styles.label}>⚠️ Всего проблем</div>
         </div>
+        
         <div className={`${styles.card} ${styles.blue}`}>
           <div className={styles.value}>{Math.round(stats.avgCompletion)}%</div>
           <div className={styles.label}>📈 Средняя готовность</div>

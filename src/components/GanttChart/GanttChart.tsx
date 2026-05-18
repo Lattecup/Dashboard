@@ -1,3 +1,5 @@
+/*
+
 import { useRef, useEffect, useState } from 'react';
 import styles from './GanttChart.module.css';
 import type { Process } from '../../types/chain.types';
@@ -264,7 +266,7 @@ const GanttChart = ({ processes, selectedProcess = 'all', chainName }: GanttChar
                 </div>
               ))}
               
-              {/* МАРКЕР "СЕГОДНЯ" НА ШКАЛЕ МЕСЯЦЕВ */}
+              /*
               {showTodayMarker && (
                 <div 
                   className={styles.todayMarker}
@@ -276,7 +278,7 @@ const GanttChart = ({ processes, selectedProcess = 'all', chainName }: GanttChar
               )}
             </div>
           </div>
-          
+         
           <div className={styles.datesContainer} style={{ height: `${containerHeight}px` }}>
             {levels.map((level, levelIdx) => (
               <div key={levelIdx} className={styles.datesRow} style={{ top: `${levelIdx * 28}px` }}>
@@ -398,3 +400,5 @@ const GanttChart = ({ processes, selectedProcess = 'all', chainName }: GanttChar
 };
 
 export default GanttChart;
+
+*/

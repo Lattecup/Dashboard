@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import styles from './ChainDetail.module.css';
 import StatsWidget from '../StatsWidget/StatsWidget';
-import IFTStagesWidget from '../IFTStagesWidget/IFTStagesWidget';
-import GanttChart from '../GanttChart/GanttChart';
+/* import IFTStagesWidget from '../IFTStagesWidget/IFTStagesWidget'; */
+/* import GanttChart from '../GanttChart/GanttChart'; */
 import ProblemsTable from '../ProblemsTable/ProblemsTable';
 import type { Chain, ChainStats } from '../../types/chain.types';
 import { parseDate } from '../utils/excelParser';
+import ProcessStagesWidget from '../ProcessStagesWidget/ProcessStagesWidget';
 
 interface ChainDetailProps {
   chain: Chain;
@@ -33,19 +34,6 @@ const ChainDetail = ({ chain, onBack }: ChainDetailProps) => {
   const sberChatLink = processes[0]?.links?.sberChat;
   
   // Фильтруем и нормализуем этапы для IFTStagesWidget
-  const normalizedStages = filteredProcesses
-    .flatMap(p => p.iftStages)
-    .filter(stage => {
-      const hasData = stage.description || 
-                      (stage.startDate && stage.startDate !== '') || 
-                      (stage.endDate && stage.endDate !== '') ||
-                      stage.totalSteps > 0;
-      return hasData;
-    })
-    .map(s => ({
-      ...s,
-      percentage: s.percentage > 1 ? s.percentage / 100 : s.percentage
-    }));
   
   const getNearestDeadline = (): string => {
     let nearestDate: Date | null = null;
@@ -119,16 +107,6 @@ const ChainDetail = ({ chain, onBack }: ChainDetailProps) => {
   const nearestDeadline = getNearestDeadline();
   
   // Фильтруем процессы для GanttChart
-  const filteredProcessesForGantt = processes.filter(process => {
-    if (selectedProcess !== 'all' && process.name !== selectedProcess) return false;
-    const hasData = process.iftStages.some(stage => {
-      return stage.description || 
-             (stage.startDate && stage.startDate !== '') || 
-             (stage.endDate && stage.endDate !== '') ||
-             stage.totalSteps > 0;
-    });
-    return hasData;
-  });
   
   return (
     <div className={styles.container}>
@@ -157,20 +135,21 @@ const ChainDetail = ({ chain, onBack }: ChainDetailProps) => {
       </div>
       
       <StatsWidget stats={stats} nearestDeadline={nearestDeadline} />
-      
-      <IFTStagesWidget stages={normalizedStages} />
-      
-      <GanttChart 
-        processes={filteredProcessesForGantt} 
-        selectedProcess={selectedProcess}
-        chainName={chain.name}
-      />
+
+      <ProcessStagesWidget 
+  processes={filteredProcesses} 
+  selectedProcess={selectedProcess}
+/>      
       
       <ProblemsTable 
         problems={allProblems} 
         sberChatLink={sberChatLink}
       />
+
+
     </div>
+
+    
   );
 };
 
