@@ -16,12 +16,6 @@ const formatDateShort = (date: Date | null): string => {
   return `${day}.${month}`;
 };
 
-const formatDateForDot = (dateStr: string | undefined): string => {
-  if (!dateStr || dateStr === '') return 'TBD';
-  const date = parseDate(dateStr);
-  return date ? formatDateShort(date) : 'TBD';
-};
-
 const getStepColor = (stage: any): string => {
   const percentage = stage.percentage;
   const endDate = parseDate(stage.endDateRaw);
