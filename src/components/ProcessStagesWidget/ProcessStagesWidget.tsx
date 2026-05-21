@@ -16,6 +16,12 @@ const formatDateShort = (date: Date | null): string => {
   return `${day}.${month}`;
 };
 
+const formatDateForDot = (dateStr: string | undefined): string => {
+  if (!dateStr || dateStr === '') return 'TBD';
+  const date = parseDate(dateStr);
+  return date ? formatDateShort(date) : 'TBD';
+};
+
 const getStepColor = (stage: any): string => {
   const percentage = stage.percentage;
   const endDate = parseDate(stage.endDateRaw);
@@ -25,6 +31,17 @@ const getStepColor = (stage: any): string => {
   if (percentage >= 99.9) return '#059669';
   if (endDate && endDate < today) return '#dc2626';
   return '#4b5563';
+};
+
+const getStageColor = (stageName: string): string => {
+  const colors: Record<string, string> = {
+    'ИФТ1': '#3b82f6',
+    'ИФТ2': '#10b981',
+    'ИФТ3': '#f59e0b',
+    'ИФТ4': '#8b5cf6',
+    'ИФТ5': '#ef4444'
+  };
+  return colors[stageName] || '#6b7280';
 };
 
 const ProcessStagesWidget = ({ processes, selectedProcess = 'all' }: GanttChartProps) => {
@@ -83,6 +100,7 @@ const ProcessStagesWidget = ({ processes, selectedProcess = 'all' }: GanttChartP
   const displayedProcesses = showAll ? processList : processList.slice(0, 4);
   const hasMoreProcesses = processList.length > 4;
   
+  // Вычисление дат для шкалы
   let minDateTime: number = Infinity;
   let maxDateTime: number = -Infinity;
   
@@ -115,16 +133,14 @@ const ProcessStagesWidget = ({ processes, selectedProcess = 'all' }: GanttChartP
     maxDateTime = now + 30 * 24 * 3600 * 1000;
   }
   
-const startDate = new Date(minDateTime);
-const endDate = new Date(maxDateTime);
-
-// Округляем до начала месяца минимальной даты
-const minDate = new Date(minDateTime);
-startDate.setFullYear(minDate.getFullYear(), minDate.getMonth(), 1);
-
-// Округляем до конца месяца максимальной даты
-const maxDate = new Date(maxDateTime);
-endDate.setFullYear(maxDate.getFullYear(), maxDate.getMonth() + 1, 0);
+  const startDate = new Date(minDateTime);
+  const endDate = new Date(maxDateTime);
+  
+  // Округляем до начала и конца месяца
+  const minDate = new Date(minDateTime);
+  startDate.setFullYear(minDate.getFullYear(), minDate.getMonth(), 1);
+  const maxDate = new Date(maxDateTime);
+  endDate.setFullYear(maxDate.getFullYear(), maxDate.getMonth() + 1, 0);
   
   const totalDays = (endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24);
   
@@ -139,6 +155,7 @@ endDate.setFullYear(maxDate.getFullYear(), maxDate.getMonth() + 1, 0);
   today.setHours(0, 0, 0, 0);
   const todayPos = getPosition(today);
   
+  // Позиция маркера "Сегодня"
   useEffect(() => {
     if (scrollRef.current && todayPos > 0 && todayPos < 100) {
       const container = scrollRef.current;
@@ -148,6 +165,7 @@ endDate.setFullYear(maxDate.getFullYear(), maxDate.getMonth() + 1, 0);
     }
   }, [todayPos]);
   
+  // Скролл к today
   useEffect(() => {
     if (scrollRef.current && todayPos > 0 && todayPos < 100) {
       const container = scrollRef.current;
@@ -174,10 +192,63 @@ endDate.setFullYear(maxDate.getFullYear(), maxDate.getMonth() + 1, 0);
   
   const timeMarks = generateTimeMarks();
   
+  // Собираем точки ИФТ для шкалы (из старого компонента)
+  const stageDatesMap = new Map<string, { 
+    stageName: string; 
+    dateStr: string; 
+    color: string; 
+    position: number;
+    count: number;
+  }>();
+  
+  filteredForDisplay.forEach(stage => {
+    if (stage.endDate) {
+      const dateStr = formatDateShort(stage.endDate);
+      const key = `${stage.stageName}_${dateStr}`;
+      const position = getPosition(stage.endDate);
+      
+      if (stageDatesMap.has(key)) {
+        const existing = stageDatesMap.get(key)!;
+        existing.count++;
+      } else {
+        stageDatesMap.set(key, {
+          stageName: stage.stageName,
+          dateStr: dateStr,
+          color: getStageColor(stage.stageName),
+          position: position,
+          count: 1
+        });
+      }
+    }
+  });
+  
+  const stageDates = Array.from(stageDatesMap.values())
+    .sort((a, b) => a.position - b.position);
+  
+  // Размещаем точки по уровням, чтобы не накладывались
+  const levels: any[][] = [];
+  stageDates.forEach(date => {
+    let levelIndex = 0;
+    while (true) {
+      if (!levels[levelIndex]) levels[levelIndex] = [];
+      const conflict = levels[levelIndex].some(existing => 
+        Math.abs(existing.position - date.position) < 8
+      );
+      if (!conflict) {
+        levels[levelIndex].push(date);
+        break;
+      }
+      levelIndex++;
+    }
+  });
+  
+  const levelCount = levels.length;
+  const containerHeight = Math.max(40, levelCount * 28);
+  
   if (displayedProcesses.length === 0) {
     return (
       <div className={styles.widget}>
-        <h3 className={styles.title}>📅 Диаграмма Ганта</h3>
+        <h3 className={styles.title}>📅 Шкала прогресса</h3>
         <div className={styles.empty}>Нет данных для отображения</div>
       </div>
     );
@@ -190,6 +261,7 @@ endDate.setFullYear(maxDate.getFullYear(), maxDate.getMonth() + 1, 0);
       <div className={styles.scrollContainer} ref={scrollRef}>
         <div className={styles.ganttContainer}>
           
+          {/* Шкала месяцев */}
           <div className={styles.monthsScale}>
             <div className={styles.timelineLine}>
               {timeMarks.map((mark, idx) => (
@@ -204,6 +276,27 @@ endDate.setFullYear(maxDate.getFullYear(), maxDate.getMonth() + 1, 0);
             </div>
           </div>
           
+          {/* Точки ИФТ на шкале (из старого компонента) */}
+          <div className={styles.datesContainer} style={{ height: `${containerHeight}px` }}>
+            {levels.map((level, levelIdx) => (
+              <div key={levelIdx} className={styles.datesRow} style={{ top: `${levelIdx * 28}px` }}>
+                {level.map((date, dateIdx) => (
+                  <div 
+                    key={`date_${date.stageName}_${dateIdx}`}
+                    className={styles.dateMarker}
+                    style={{ left: `${date.position}%` }}
+                  >
+                    <div className={styles.dateDot} style={{ background: date.color }} />
+                    <div className={styles.dateLabel} style={{ color: date.color }}>
+                      {date.count > 1 ? `${date.stageName} (${date.count}) — ${date.dateStr}` : `${date.stageName} — ${date.dateStr}`}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+          
+          {/* Маркер "Сегодня" */}
           {todayPos > 0 && todayPos < 100 && (
             <div className={styles.todayMarker} style={{ left: `${lineLeft}px` }}>
               <div className={styles.todayLabel}>Сегодня</div>
@@ -211,6 +304,7 @@ endDate.setFullYear(maxDate.getFullYear(), maxDate.getMonth() + 1, 0);
             </div>
           )}
           
+          {/* Строки процессов с полосками прогресса */}
           <div className={styles.rows}>
             {displayedProcesses.map((process) => (
               <div key={process.name} className={styles.row}>
@@ -230,7 +324,7 @@ endDate.setFullYear(maxDate.getFullYear(), maxDate.getMonth() + 1, 0);
                     
                     return (
                       <div key={stage.id} className={styles.stageWrapper}>
-                        {/* Описание (Что делается в ИФТ1) НАД полоской */}
+                        {/* Описание НАД полоской */}
                         {stage.description && (
                           <div className={styles.stageDescriptionAbove}>
                             {stage.description}
