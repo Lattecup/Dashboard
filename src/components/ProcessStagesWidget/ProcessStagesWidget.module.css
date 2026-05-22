@@ -35,10 +35,10 @@
   padding: 0 20px;
 }
 
-.monthsScale {
+.weeksScale {
   position: relative;
-  height: 30px;
-  margin-bottom: 35px;
+  height: 50px;
+  margin-bottom: 50px;
   margin-left: 160px;
   width: calc(100% - 160px);
   overflow: visible;
@@ -48,24 +48,51 @@
   position: absolute;
   left: 0;
   right: 0;
-  height: 30px;
+  height: 50px;
   border-bottom: 1px solid #e5e7eb;
 }
 
-.monthMark {
+.weekMark {
   position: absolute;
   transform: translateX(-50%);
   font-size: 10px;
   color: #9ca3af;
   white-space: nowrap;
-  bottom: -20px;
   background: white;
   padding: 0 4px;
 }
 
-.todayMarker {
+.weekMarkTop {
+  color-scheme: weekMark;
+  bottom: -20px;
+}
+
+.weekMarkBottom {
+  color-scheme: weekMark;
+  top: 20px;
+}
+
+.rowWeekGrid {
   position: absolute;
   top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.weekLine {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-left: 1px dashed #e5e7eb;
+  pointer-events: none;
+}
+
+.todayMarker {
+  position: absolute;
+  top: -20px;
   transform: translateX(-50%);
   z-index: 10;
   display: flex;
@@ -95,17 +122,22 @@
 .rows {
   display: flex;
   flex-direction: column;
-  margin-top: 20px;
+  margin-top: 30px;
   position: relative;
 }
 
 .row {
   display: flex;
   align-items: center;
-  padding: 20px 0 5px 0;
+  padding: 25px 0 40px 0;
   border-bottom: 1px solid #f3f4f6;
   position: relative;
   min-height: 80px;
+  margin: 10px 0 5px 0;
+}
+
+.row:last-child {
+  border-bottom: none;
 }
 
 .row:hover {
@@ -116,6 +148,9 @@
   width: 160px;
   flex-shrink: 0;
   padding-right: 12px;
+  position: relative;
+  z-index: 15;
+  background: inherit;
 }
 
 .processName {
@@ -133,26 +168,29 @@
 
 .stageWrapper {
   position: relative;
-  margin-bottom: 15px;
   min-height: 32px;
 }
 
-.stageWrapper:last-child {
-  margin-bottom: 0;
+.stageWrapper:first-child {
+  margin-top: 25px;
 }
 
-/* Описание НАД полоской */
 .stageDescriptionAbove {
   position: absolute;
+  bottom: 100%;
   left: 0;
-  bottom: 34px;
+  margin-bottom: 8px;
   font-size: 11px;
   font-weight: 400;
   color: #6b7280;
-  white-space: nowrap;
   background: transparent;
   padding: 0;
   z-index: 5;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.4;
+  pointer-events: none;
+  max-width: 800px;
 }
 
 .barTrack {
@@ -166,6 +204,7 @@
   background: #e5e7eb;
   display: flex;
   align-items: center;
+  z-index: 10;
 }
 
 .fill {
@@ -184,7 +223,7 @@
 
 .stageContent {
   position: relative;
-  z-index: 2;
+  z-index: 12;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -207,9 +246,33 @@
   font-weight: 600;
 }
 
-.dateLabel {
-  font-weight: 500;
-  color: #1f2937;
+.endDateDot {
+  position: absolute;
+  left: 100%;
+  top: 28px;
+  transform: translateX(-50%);
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+}
+
+.endDateDotPoint {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #374151;
+}
+
+.endDateDotLabel {
+  font-size: 9px;
+  font-weight: 600;
+  padding: 2px 4px;
+  border-radius: 10px;
+  white-space: nowrap;
+  color: #374151;
+  margin-top: 4px;
 }
 
 .showMoreButton {
@@ -237,45 +300,4 @@
   text-align: center;
   padding: 40px;
   color: #9ca3af;
-}
-
-.datesContainer {
-  position: relative;
-  margin-bottom: 10px;
-  margin-left: 160px;
-  width: calc(100% - 160px);
-  overflow: visible;
-  min-height: 60px;
-}
-
-.datesRow {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 28px;
-  overflow: visible;
-}
-
-.dateMarker {
-  position: absolute;
-  transform: translateX(-50%);
-  text-align: center;
-  white-space: nowrap;
-}
-
-.dateDot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  margin: 0 auto 3px;
-}
-
-.dateLabel {
-  font-size: 8px;
-  font-weight: 600;
-  background: white;
-  padding: 1px 4px;
-  border-radius: 10px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  white-space: nowrap;
 }

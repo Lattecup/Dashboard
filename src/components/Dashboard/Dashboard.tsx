@@ -188,7 +188,7 @@ const Dashboard = () => {
 
   return (
     <div className={styles.dashboard}>
-      <h1 className={styles.title}>📊 Статус ИФТ</h1>
+      <h1 className={styles.title}>Статус ИФТ</h1>
       <p className={styles.subtitle}>Загрузите Excel файл с данными по сквозным цепочкам</p>
 
       <Instructions />

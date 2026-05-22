@@ -27,17 +27,6 @@ const getStepColor = (stage: any): string => {
   return '#4b5563';
 };
 
-const getStageColor = (stageName: string): string => {
-  const colors: Record<string, string> = {
-    'ИФТ1': '#3b82f6',
-    'ИФТ2': '#10b981',
-    'ИФТ3': '#f59e0b',
-    'ИФТ4': '#8b5cf6',
-    'ИФТ5': '#ef4444'
-  };
-  return colors[stageName] || '#6b7280';
-};
-
 const ProcessStagesWidget = ({ processes, selectedProcess = 'all' }: GanttChartProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showAll, setShowAll] = useState(false);
@@ -94,7 +83,6 @@ const ProcessStagesWidget = ({ processes, selectedProcess = 'all' }: GanttChartP
   const displayedProcesses = showAll ? processList : processList.slice(0, 4);
   const hasMoreProcesses = processList.length > 4;
   
-  // Вычисление дат для шкалы
   let minDateTime: number = Infinity;
   let maxDateTime: number = -Infinity;
   
@@ -111,14 +99,25 @@ const ProcessStagesWidget = ({ processes, selectedProcess = 'all' }: GanttChartP
     }
   });
   
-  const hasUnfinishedStages = allStagesList.some(stage => stage.percentage < 99.9);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayTime = today.getTime();
   
-  if (hasUnfinishedStages) {
-    const currentDate = new Date();
-    const endOfCurrentMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-    if (endOfCurrentMonth.getTime() > maxDateTime) {
-      maxDateTime = endOfCurrentMonth.getTime();
-    }
+  let referenceDate = Math.max(maxDateTime, todayTime);
+  
+  const hasUnfinishedOrOverdueStages = allStagesList.some(stage => {
+    const isUnfinished = stage.percentage < 99.9;
+    const isOverdue = stage.endDate && stage.endDate.getTime() < todayTime;
+    return isUnfinished || isOverdue;
+  });
+  
+  if (hasUnfinishedOrOverdueStages) {
+    const referenceDateObj = new Date(referenceDate);
+    const oneWeekAfter = new Date(referenceDateObj);
+    oneWeekAfter.setDate(referenceDateObj.getDate() + 7);
+    maxDateTime = oneWeekAfter.getTime();
+  } else {
+    maxDateTime = referenceDate;
   }
   
   if (minDateTime === Infinity || maxDateTime === -Infinity) {
@@ -130,12 +129,6 @@ const ProcessStagesWidget = ({ processes, selectedProcess = 'all' }: GanttChartP
   const startDate = new Date(minDateTime);
   const endDate = new Date(maxDateTime);
   
-  // Округляем до начала и конца месяца
-  const minDate = new Date(minDateTime);
-  startDate.setFullYear(minDate.getFullYear(), minDate.getMonth(), 1);
-  const maxDate = new Date(maxDateTime);
-  endDate.setFullYear(maxDate.getFullYear(), maxDate.getMonth() + 1, 0);
-  
   const totalDays = (endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24);
   
   const getPosition = (date: Date | null): number => {
@@ -145,11 +138,30 @@ const ProcessStagesWidget = ({ processes, selectedProcess = 'all' }: GanttChartP
     return Math.max(0, Math.min(100, position));
   };
   
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
   const todayPos = getPosition(today);
   
-  // Позиция маркера "Сегодня"
+  const getMondays = (start: Date, end: Date): Date[] => {
+    const mondays: Date[] = [];
+    const current = new Date(start);
+    while (current.getDay() !== 1) {
+      current.setDate(current.getDate() + 1);
+    }
+    
+    while (current <= end) {
+      mondays.push(new Date(current));
+      current.setDate(current.getDate() + 7);
+    }
+    return mondays;
+  };
+  
+  const mondays = getMondays(startDate, endDate);
+  
+  const getDescriptionLines = (text: string): number => {
+    if (!text) return 0;
+    const charsPerLine = 35;
+    return Math.ceil(text.length / charsPerLine);
+  };
+  
   useEffect(() => {
     if (scrollRef.current && todayPos > 0 && todayPos < 100) {
       const container = scrollRef.current;
@@ -159,7 +171,6 @@ const ProcessStagesWidget = ({ processes, selectedProcess = 'all' }: GanttChartP
     }
   }, [todayPos]);
   
-  // Скролл к today
   useEffect(() => {
     if (scrollRef.current && todayPos > 0 && todayPos < 100) {
       const container = scrollRef.current;
@@ -168,76 +179,6 @@ const ProcessStagesWidget = ({ processes, selectedProcess = 'all' }: GanttChartP
       container.scrollLeft = Math.max(0, scrollPosition);
     }
   }, [todayPos]);
-  
-  const generateTimeMarks = () => {
-    const marks = [];
-    const current = new Date(startDate);
-    current.setDate(1);
-    
-    while (current <= endDate) {
-      marks.push({
-        position: getPosition(current),
-        label: current.toLocaleString('ru-RU', { month: 'short', year: 'numeric' })
-      });
-      current.setMonth(current.getMonth() + 1);
-    }
-    return marks;
-  };
-  
-  const timeMarks = generateTimeMarks();
-  
-  // Собираем точки ИФТ для шкалы (из старого компонента)
-  const stageDatesMap = new Map<string, { 
-    stageName: string; 
-    dateStr: string; 
-    color: string; 
-    position: number;
-    count: number;
-  }>();
-  
-  filteredForDisplay.forEach(stage => {
-    if (stage.endDate) {
-      const dateStr = formatDateShort(stage.endDate);
-      const key = `${stage.stageName}_${dateStr}`;
-      const position = getPosition(stage.endDate);
-      
-      if (stageDatesMap.has(key)) {
-        const existing = stageDatesMap.get(key)!;
-        existing.count++;
-      } else {
-        stageDatesMap.set(key, {
-          stageName: stage.stageName,
-          dateStr: dateStr,
-          color: getStageColor(stage.stageName),
-          position: position,
-          count: 1
-        });
-      }
-    }
-  });
-  
-  const stageDates = Array.from(stageDatesMap.values())
-    .sort((a, b) => a.position - b.position);
-  
-  // Размещаем точки по уровням, чтобы не накладывались
-  const levels: any[][] = [];
-  stageDates.forEach(date => {
-    let levelIndex = 0;
-    while (true) {
-      if (!levels[levelIndex]) levels[levelIndex] = [];
-      const conflict = levels[levelIndex].some(existing => 
-        Math.abs(existing.position - date.position) < 8
-      );
-      if (!conflict) {
-        levels[levelIndex].push(date);
-        break;
-      }
-      levelIndex++;
-    }
-  });
-  
-  const levelCount = levels.length;
-  const containerHeight = Math.max(40, levelCount * 28);
   
   if (displayedProcesses.length === 0) {
     return (
@@ -255,42 +196,25 @@ const ProcessStagesWidget = ({ processes, selectedProcess = 'all' }: GanttChartP
       <div className={styles.scrollContainer} ref={scrollRef}>
         <div className={styles.ganttContainer}>
           
-          {/* Шкала месяцев */}
-          <div className={styles.monthsScale}>
+          <div className={styles.weeksScale}>
             <div className={styles.timelineLine}>
-              {timeMarks.map((mark, idx) => (
-                <div 
-                  key={idx}
-                  className={styles.monthMark}
-                  style={{ left: `${mark.position}%` }}
-                >
-                  {mark.label}
-                </div>
-              ))}
+              {mondays.map((monday, idx) => {
+                const position = getPosition(monday);
+                const isEven = idx % 2 === 0;
+                
+                return (
+                  <div 
+                    key={idx}
+                    className={`${styles.weekMark} ${isEven ? styles.weekMarkTop : styles.weekMarkBottom}`}
+                    style={{ left: `${position}%` }}
+                  >
+                    {monday.toLocaleString('ru-RU', { day: 'numeric', month: 'short' })}
+                  </div>
+                );
+              })}
             </div>
           </div>
           
-          {/* Точки ИФТ на шкале (из старого компонента) */}
-          <div className={styles.datesContainer} style={{ height: `${containerHeight}px` }}>
-            {levels.map((level, levelIdx) => (
-              <div key={levelIdx} className={styles.datesRow} style={{ top: `${levelIdx * 28}px` }}>
-                {level.map((date, dateIdx) => (
-                  <div 
-                    key={`date_${date.stageName}_${dateIdx}`}
-                    className={styles.dateMarker}
-                    style={{ left: `${date.position}%` }}
-                  >
-                    <div className={styles.dateDot} style={{ background: date.color }} />
-                    <div className={styles.dateLabel} style={{ color: date.color }}>
-                      {date.count > 1 ? `${date.stageName} (${date.count}) — ${date.dateStr}` : `${date.stageName} — ${date.dateStr}`}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-          
-          {/* Маркер "Сегодня" */}
           {todayPos > 0 && todayPos < 100 && (
             <div className={styles.todayMarker} style={{ left: `${lineLeft}px` }}>
               <div className={styles.todayLabel}>Сегодня</div>
@@ -298,7 +222,6 @@ const ProcessStagesWidget = ({ processes, selectedProcess = 'all' }: GanttChartP
             </div>
           )}
           
-          {/* Строки процессов с полосками прогресса */}
           <div className={styles.rows}>
             {displayedProcesses.map((process) => (
               <div key={process.name} className={styles.row}>
@@ -306,7 +229,17 @@ const ProcessStagesWidget = ({ processes, selectedProcess = 'all' }: GanttChartP
                   <div className={styles.processName}>{process.name}</div>
                 </div>
                 <div className={styles.rowTimeline}>
-                  {process.stages.map((stage) => {
+                  <div className={styles.rowWeekGrid}>
+                    {mondays.map((monday, idx) => (
+                      <div
+                        key={idx}
+                        className={styles.weekLine}
+                        style={{ left: `${getPosition(monday)}%` }}
+                      />
+                    ))}
+                  </div>
+                  
+                  {process.stages.map((stage, index, array) => {
                     const startPos = stage.startDate ? getPosition(stage.startDate) : 0;
                     const endPos = stage.endDate ? getPosition(stage.endDate) : 100;
                     const barWidth = Math.max(endPos - startPos, 2);
@@ -316,11 +249,29 @@ const ProcessStagesWidget = ({ processes, selectedProcess = 'all' }: GanttChartP
                     const displayTotal = isTBD ? 'TBD' : stage.totalSteps;
                     const isFull = displayPercent >= 100;
                     
+                    // Смотрим на следующий этап
+                    const nextStage = array[index + 1];
+                    const isLastStage = index === array.length - 1;
+                    
+                    // Для последнего этапа отступ не нужен
+                    let marginBottom = 0;
+                    if (!isLastStage) {
+                      const nextStageDescription = nextStage?.description || '';
+                      const nextStageLines = getDescriptionLines(nextStageDescription);
+                      marginBottom = nextStageLines === 0 ? 24 : 36 + nextStageLines * 12;
+                    }
+                    
                     return (
-                      <div key={stage.id} className={styles.stageWrapper}>
-                        {/* Описание НАД полоской */}
+                      <div 
+                        key={stage.id} 
+                        className={styles.stageWrapper}
+                        style={{ marginBottom: `${marginBottom}px` }}
+                      >
                         {stage.description && (
-                          <div className={styles.stageDescriptionAbove}>
+                          <div 
+                            className={styles.stageDescriptionAbove}
+                            style={{ left: `${startPos}%` }}
+                          >
                             {stage.description}
                           </div>
                         )}
@@ -337,7 +288,16 @@ const ProcessStagesWidget = ({ processes, selectedProcess = 'all' }: GanttChartP
                             <span className={styles.stepsLabel} style={{ color: stepColor }}>
                               {stage.completedSteps}/{displayTotal}
                             </span>
-                            <span className={styles.dateLabel}>{formatDateShort(stage.endDate)}</span>
+                          </div>
+                        </div>
+                        
+                        <div 
+                          className={styles.endDateDot}
+                          style={{ left: `${endPos}%` }}
+                        >
+                          <div className={styles.endDateDotPoint} />
+                          <div className={styles.endDateDotLabel}>
+                            {stage.endDate ? formatDateShort(stage.endDate) : 'TBD'}
                           </div>
                         </div>
                       </div>
