@@ -4,7 +4,7 @@ import FileUploader from '../FileUploader/FileUploader';
 import ChainDetail from '../ChainDetail/ChainDetail';
 import Instructions from '../Instructions/Instructions';
 import type { Chain, ChainSummary } from '../../types/chain.types';
-import { parseExcelFile } from '../utils/excelParser';
+import { parseExcelFile, parseDate } from '../utils/excelParser';
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(false);
@@ -48,13 +48,17 @@ const Dashboard = () => {
           const hasSteps = stage.totalSteps > 0;
           
           if (hasSteps) {
-            const percentage = stage.percentage > 1 ? stage.percentage / 100 : stage.percentage;
+            let percentage = stage.percentage;
+            if (percentage <= 1 && percentage > 0) percentage = percentage * 100;
             totalCompletion += percentage;
             totalStages++;
           }
           
-          const endDate = new Date(stage.endDate);
-          if (!isNaN(endDate.getTime()) && endDate < new Date() && stage.percentage < 100) {
+          const endDate = parseDate(stage.endDate);
+          let percentForCheck = stage.percentage;
+          if (percentForCheck <= 1 && percentForCheck > 0) percentForCheck = percentForCheck * 100;
+          const isNotComplete = percentForCheck < 99.9;
+          if (endDate && endDate < new Date() && isNotComplete) {
             overdueStages++;
           }
         });
@@ -65,7 +69,7 @@ const Dashboard = () => {
         name: chain.name,
         totalProcesses,
         totalProblems,
-        avgCompletion: totalStages > 0 ? (totalCompletion / totalStages) * 100 : 0,
+        avgCompletion: totalStages > 0 ? (totalCompletion / totalStages) : 0,
         overdueStages
       };
     });
@@ -88,12 +92,13 @@ const Dashboard = () => {
           
           const hasSteps = stage.totalSteps > 0;
           if (hasSteps) {
-            const percentage = stage.percentage > 1 ? stage.percentage / 100 : stage.percentage;
+            let percentage = stage.percentage;
+            if (percentage <= 1 && percentage > 0) percentage = percentage * 100;
             totalCompletion += percentage;
             totalStages++;
           }
         });
-        const avgCompletion = totalStages > 0 ? (totalCompletion / totalStages) * 100 : 0;
+        const avgCompletion = totalStages > 0 ? (totalCompletion / totalStages) : 0;
         
         allProcesses.push({
           name: process.name,
@@ -140,13 +145,17 @@ const Dashboard = () => {
           
           const hasSteps = stage.totalSteps > 0;
           if (hasSteps) {
-            const percentage = stage.percentage > 1 ? stage.percentage / 100 : stage.percentage;
+            let percentage = stage.percentage;
+            if (percentage <= 1 && percentage > 0) percentage = percentage * 100;
             totalCompletion += percentage;
             totalStages++;
           }
           
-          const endDate = new Date(stage.endDate);
-          if (!isNaN(endDate.getTime()) && endDate < new Date() && stage.percentage < 100) {
+          const endDate = parseDate(stage.endDate);
+          let percentForCheck = stage.percentage;
+          if (percentForCheck <= 1 && percentForCheck > 0) percentForCheck = percentForCheck * 100;
+          const isNotComplete = percentForCheck < 99.9;
+          if (endDate && endDate < new Date() && isNotComplete) {
             totalOverdue++;
           }
         });
@@ -157,7 +166,7 @@ const Dashboard = () => {
       totalChains,
       totalProcesses,
       totalProblems,
-      avgCompletion: totalStages > 0 ? (totalCompletion / totalStages) * 100 : 0,
+      avgCompletion: totalStages > 0 ? (totalCompletion / totalStages) : 0,
       totalOverdue
     };
   };

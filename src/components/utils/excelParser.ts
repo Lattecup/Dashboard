@@ -12,15 +12,24 @@ export const parseDate = (value: string | number | null | undefined): Date | nul
   if (typeof value === 'number') return excelNumberToDate(value);
   const str = String(value).trim();
   if (str.toLowerCase() === 'tbd') return null;
-  if (str.match(/^\d{2}\.\d{2}\.\d{4}$/)) {
-    const parts = str.split('.');
-    const date = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+  
+  // Формат DD.MM.YYYY
+  const matchDDMMYYYY = str.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+  if (matchDDMMYYYY) {
+    const day = parseInt(matchDDMMYYYY[1], 10);
+    const month = parseInt(matchDDMMYYYY[2], 10) - 1;
+    const year = parseInt(matchDDMMYYYY[3], 10);
+    const date = new Date(year, month, day);
     if (!isNaN(date.getTime())) return date;
   }
-  if (str.match(/^\d{4}-\d{2}-\d{2}$/)) {
+  
+  // Формат YYYY-MM-DD
+  const matchYYYYMMDD = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (matchYYYYMMDD) {
     const date = new Date(str);
     if (!isNaN(date.getTime())) return date;
   }
+  
   return null;
 };
 
@@ -421,6 +430,4 @@ export const parseExcelFile = (file: File): Promise<Chain[]> => {
     reader.onerror = () => reject(new Error('Ошибка чтения файла'));
     reader.readAsArrayBuffer(file);
   });
-
-  
 };

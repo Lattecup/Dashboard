@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import styles from './ChainDetail.module.css';
 import StatsWidget from '../StatsWidget/StatsWidget';
-/* import IFTStagesWidget from '../IFTStagesWidget/IFTStagesWidget'; */
-/* import GanttChart from '../GanttChart/GanttChart'; */
 import ProblemsTable from '../ProblemsTable/ProblemsTable';
 import type { Chain, ChainStats } from '../../types/chain.types';
 import { parseDate } from '../utils/excelParser';
@@ -20,6 +18,11 @@ const formatDateStr = (date: Date): string => {
   return `${day}.${month}.${year}`;
 };
 
+const normalizePercent = (value: number): number => {
+  if (value <= 1 && value > 0) return value * 100;
+  return value;
+};
+
 const ChainDetail = ({ chain, onBack }: ChainDetailProps) => {
   const [selectedProcess, setSelectedProcess] = useState<string>('all');
   
@@ -33,21 +36,19 @@ const ChainDetail = ({ chain, onBack }: ChainDetailProps) => {
   const allProblems = filteredProcesses.flatMap(p => p.problems);
   const sberChatLink = processes[0]?.links?.sberChat;
   
-  // Фильтруем и нормализуем этапы для IFTStagesWidget
-  
-  const getNearestDeadline = (): string => {
-    let nearestDate: Date | null = null;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+  const getLatestDeadline = (): string => {
+    let latestDate: Date | null = null;
     
     filteredProcesses.forEach(process => {
       process.iftStages.forEach(stage => {
-        if (stage.endDate && stage.endDate !== '') {
-          const date = parseDate(stage.endDate);
-          if (date && date instanceof Date && !isNaN(date.getTime())) {
-            if (date >= today) {
-              if (!nearestDate || date < nearestDate) {
-                nearestDate = date;
+        if (stage.name === 'ИФТ5') {
+          const percentForCheck = normalizePercent(stage.percentage);
+          const isNotComplete = percentForCheck < 99.9;
+          if (stage.endDate && stage.endDate !== '' && isNotComplete) {
+            const date = parseDate(stage.endDate);
+            if (date && date instanceof Date && !isNaN(date.getTime())) {
+              if (!latestDate || date > latestDate) {
+                latestDate = date;
               }
             }
           }
@@ -55,7 +56,7 @@ const ChainDetail = ({ chain, onBack }: ChainDetailProps) => {
       });
     });
     
-    return nearestDate ? formatDateStr(nearestDate) : 'Нет';
+    return latestDate ? formatDateStr(latestDate) : 'Нет';
   };
   
   const calculateStats = (): ChainStats => {
@@ -83,13 +84,15 @@ const ChainDetail = ({ chain, onBack }: ChainDetailProps) => {
         if (!hasData) return;
         
         if (hasSteps) {
-          const percentage = stage.percentage > 1 ? stage.percentage / 100 : stage.percentage;
+          const percentage = normalizePercent(stage.percentage);
           totalCompletion += percentage;
           totalStages++;
         }
         
-        const endDate = new Date(stage.endDate);
-        if (!isNaN(endDate.getTime()) && endDate < new Date() && stage.percentage < 100) {
+        const endDate = parseDate(stage.endDate);
+        const percentForCheck = normalizePercent(stage.percentage);
+        const isNotComplete = percentForCheck < 99.9;
+        if (endDate && endDate < new Date() && isNotComplete) {
           overdueCount++;
         }
       });
@@ -98,15 +101,13 @@ const ChainDetail = ({ chain, onBack }: ChainDetailProps) => {
     return {
       totalProcesses: filteredProcesses.length,
       totalProblems: allProblems.length,
-      avgCompletion: totalStages > 0 ? (totalCompletion / totalStages) * 100 : 0,
+      avgCompletion: totalStages > 0 ? (totalCompletion / totalStages) : 0,
       overdueStages: overdueCount
     };
   };
   
   const stats = calculateStats();
-  const nearestDeadline = getNearestDeadline();
-  
-  // Фильтруем процессы для GanttChart
+  const latestDeadline = getLatestDeadline();
   
   return (
     <div className={styles.container}>
@@ -134,22 +135,18 @@ const ChainDetail = ({ chain, onBack }: ChainDetailProps) => {
         )}
       </div>
       
-      <StatsWidget stats={stats} nearestDeadline={nearestDeadline} />
+      <StatsWidget stats={stats} nearestDeadline={latestDeadline} />
 
       <ProcessStagesWidget 
-  processes={filteredProcesses} 
-  selectedProcess={selectedProcess}
-/>      
+        processes={filteredProcesses} 
+        selectedProcess={selectedProcess}
+      />      
       
       <ProblemsTable 
         problems={allProblems} 
         sberChatLink={sberChatLink}
       />
-
-
     </div>
-
-    
   );
 };
 

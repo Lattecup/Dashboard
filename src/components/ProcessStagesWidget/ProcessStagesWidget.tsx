@@ -70,6 +70,13 @@ const ProcessStagesWidget = ({ processes, selectedProcess = 'all' }: GanttChartP
     stagesByProcess.get(stage.processName)!.push(stage);
   });
   
+  processes.forEach(process => {
+    if (selectedProcess !== 'all' && process.name !== selectedProcess) return;
+    if (!stagesByProcess.has(process.name)) {
+      stagesByProcess.set(process.name, []);
+    }
+  });
+  
   const stageOrder = ['ИФТ1', 'ИФТ2', 'ИФТ3', 'ИФТ4', 'ИФТ5'];
   for (const stages of stagesByProcess.values()) {
     stages.sort((a, b) => stageOrder.indexOf(a.stageName) - stageOrder.indexOf(b.stageName));
@@ -216,96 +223,112 @@ const ProcessStagesWidget = ({ processes, selectedProcess = 'all' }: GanttChartP
           </div>
           
           {todayPos > 0 && todayPos < 100 && (
-            <div className={styles.todayMarker} style={{ left: `${lineLeft}px` }}>
-              <div className={styles.todayLabel}>Сегодня</div>
-              <div className={styles.todayArrow}>▼</div>
-            </div>
+            <>
+              <div className={styles.todayMarker} style={{ left: `${lineLeft}px` }}>
+                <div className={styles.todayLabel}>Сегодня</div>
+                <div className={styles.todayArrow}>▼</div>
+              </div>
+              <div className={styles.todayVerticalLine} style={{ left: `${lineLeft}px` }} />
+            </>
           )}
           
           <div className={styles.rows}>
-            {displayedProcesses.map((process) => (
-              <div key={process.name} className={styles.row}>
-                <div className={styles.rowName}>
-                  <div className={styles.processName}>{process.name}</div>
-                </div>
-                <div className={styles.rowTimeline}>
-                  <div className={styles.rowWeekGrid}>
-                    {mondays.map((monday, idx) => (
-                      <div
-                        key={idx}
-                        className={styles.weekLine}
-                        style={{ left: `${getPosition(monday)}%` }}
-                      />
-                    ))}
+            {displayedProcesses.map((process) => {
+              if (process.stages.length === 0) {
+                return (
+                  <div key={process.name} className={styles.row}>
+                    <div className={styles.rowName}>
+                      <div className={styles.processName}>{process.name}</div>
+                    </div>
+                    <div className={styles.rowTimelineEmpty}>
+                      <div className={styles.emptyProcessMessage}>Нет запланированных этапов</div>
+                    </div>
                   </div>
-                  
-                  {process.stages.map((stage, index, array) => {
-                    const startPos = stage.startDate ? getPosition(stage.startDate) : 0;
-                    const endPos = stage.endDate ? getPosition(stage.endDate) : 100;
-                    const barWidth = Math.max(endPos - startPos, 2);
-                    const displayPercent = Math.round(stage.percentage);
-                    const stepColor = getStepColor(stage);
-                    const isTBD = stage.totalSteps === 0 && stage.completedSteps > 0;
-                    const displayTotal = isTBD ? 'TBD' : stage.totalSteps;
-                    const isFull = displayPercent >= 100;
+                );
+              }
+              
+              return (
+                <div key={process.name} className={styles.row}>
+                  <div className={styles.rowName}>
+                    <div className={styles.processName}>{process.name}</div>
+                  </div>
+                  <div className={styles.rowTimeline}>
+                    <div className={styles.rowWeekGrid}>
+                      {mondays.map((monday, idx) => (
+                        <div
+                          key={idx}
+                          className={styles.weekLine}
+                          style={{ left: `${getPosition(monday)}%` }}
+                        />
+                      ))}
+                    </div>
                     
-                    // Смотрим на следующий этап
-                    const nextStage = array[index + 1];
-                    const isLastStage = index === array.length - 1;
-                    
-                    // Для последнего этапа отступ не нужен
-                    let marginBottom = 0;
-                    if (!isLastStage) {
-                      const nextStageDescription = nextStage?.description || '';
-                      const nextStageLines = getDescriptionLines(nextStageDescription);
-                      marginBottom = nextStageLines === 0 ? 24 : 36 + nextStageLines * 12;
-                    }
-                    
-                    return (
-                      <div 
-                        key={stage.id} 
-                        className={styles.stageWrapper}
-                        style={{ marginBottom: `${marginBottom}px` }}
-                      >
-                        {stage.description && (
+                    {process.stages.map((stage, index, array) => {
+                      const startPos = stage.startDate ? getPosition(stage.startDate) : 0;
+                      const endPos = stage.endDate ? getPosition(stage.endDate) : 100;
+                      const barWidth = Math.max(endPos - startPos, 2);
+                      const displayPercent = Math.round(stage.percentage);
+                      const stepColor = getStepColor(stage);
+                      const isTBD = stage.totalSteps === 0 && stage.completedSteps > 0;
+                      const displayTotal = isTBD ? 'TBD' : stage.totalSteps;
+                      const isFull = displayPercent >= 100;
+                      
+                      const nextStage = array[index + 1];
+                      const isLastStage = index === array.length - 1;
+                      
+                      let marginBottom = 0;
+                      if (!isLastStage) {
+                        const nextStageDescription = nextStage?.description || '';
+                        const nextStageLines = getDescriptionLines(nextStageDescription);
+                        marginBottom = nextStageLines === 0 ? 24 : 36 + nextStageLines * 12;
+                      }
+                      
+                      return (
+                        <div 
+                          key={stage.id} 
+                          className={styles.stageWrapper}
+                          style={{ marginBottom: `${marginBottom}px` }}
+                        >
+                          {stage.description && (
+                            <div 
+                              className={styles.stageDescriptionAbove}
+                              style={{ left: `${startPos}%` }}
+                            >
+                              {stage.description}
+                            </div>
+                          )}
                           <div 
-                            className={styles.stageDescriptionAbove}
-                            style={{ left: `${startPos}%` }}
+                            className={styles.barTrack}
+                            style={{ left: `${startPos}%`, width: `${barWidth}%` }}
                           >
-                            {stage.description}
+                            <div 
+                              className={`${styles.fill} ${isFull ? styles.fillFull : ''}`}
+                              style={{ width: `${displayPercent}%` }}
+                            />
+                            <div className={styles.stageContent}>
+                              <span className={styles.percentLabel}>{displayPercent}%</span>
+                              <span className={styles.stepsLabel} style={{ color: stepColor }}>
+                                {stage.completedSteps}/{displayTotal}
+                              </span>
+                            </div>
                           </div>
-                        )}
-                        <div 
-                          className={styles.barTrack}
-                          style={{ left: `${startPos}%`, width: `${barWidth}%` }}
-                        >
+                          
                           <div 
-                            className={`${styles.fill} ${isFull ? styles.fillFull : ''}`}
-                            style={{ width: `${displayPercent}%` }}
-                          />
-                          <div className={styles.stageContent}>
-                            <span className={styles.percentLabel}>{displayPercent}%</span>
-                            <span className={styles.stepsLabel} style={{ color: stepColor }}>
-                              {stage.completedSteps}/{displayTotal}
-                            </span>
+                            className={styles.endDateDot}
+                            style={{ left: `${endPos}%` }}
+                          >
+                            <div className={styles.endDateDotPoint} />
+                            <div className={styles.endDateDotLabel}>
+                              {stage.endDate ? formatDateShort(stage.endDate) : 'TBD'}
+                            </div>
                           </div>
                         </div>
-                        
-                        <div 
-                          className={styles.endDateDot}
-                          style={{ left: `${endPos}%` }}
-                        >
-                          <div className={styles.endDateDotPoint} />
-                          <div className={styles.endDateDotLabel}>
-                            {stage.endDate ? formatDateShort(stage.endDate) : 'TBD'}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
           
         </div>

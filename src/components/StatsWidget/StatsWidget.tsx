@@ -45,7 +45,7 @@ const StatsWidget = ({ stats, nearestDeadline }: StatsWidgetProps) => {
         {nearestDeadline && (
           <div className={`${styles.card} ${styles.deadline}`}>
             <div className={styles.value}>{nearestDeadline}</div>
-            <div className={styles.label}>📅 Ближайший дедлайн</div>
+            <div className={styles.label}>📅 Дедлайн</div>
           </div>
         )}
       </div>

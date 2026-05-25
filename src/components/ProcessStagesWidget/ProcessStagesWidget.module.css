@@ -301,3 +301,38 @@
   padding: 40px;
   color: #9ca3af;
 }
+
+.rowTimelineEmpty {
+  flex: 1;
+  position: relative;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.emptyProcessMessage {
+  font-size: 12px;
+  color: #9ca3af;
+  font-style: italic;
+  background: #f9fafb;
+  padding: 8px 16px;
+  border-radius: 20px;
+}
+
+/* Пунктирная красная линия от маркера "Сегодня" вниз */
+.todayVerticalLine {
+  position: absolute;
+  top: 20px;
+  bottom: 0;
+  width: 1px;
+  background: repeating-linear-gradient(
+    to bottom,
+    #ef4444,
+    #ef4444 8px,
+    transparent 8px,
+    transparent 16px
+  );
+  z-index: 15;
+  pointer-events: none;
+}
