@@ -2,6 +2,9 @@ import { useRef, useEffect, useState } from 'react';
 import styles from './ProcessStagesWidget.module.css';
 import type { Process } from '../../types/chain.types';
 import { parseDate } from '../utils/excelParser';
+import img1 from '../../../public/images/img1.png';
+import img2 from '../../../public/images/img2.png';
+import img3 from '../../../public/images/img3.png';
 
 interface GanttChartProps {
   processes: Process[];
@@ -53,9 +56,9 @@ const getStepColor = (stage: any): string => {
 // Получить картинку для интеграции
 const getIntegrationIcon = (integrationType?: string): string | null => {
   if (!integrationType) return null;
-  if (integrationType.includes('Внутри ERP')) return '/images/img1.png';
-  if (integrationType.includes('С внешниками')) return '/images/img2.png';
-  if (integrationType.includes('В СП внешники не требуются')) return '/images/img3.png';
+  if (integrationType.includes('Внутри ERP')) return img1;
+  if (integrationType.includes('С внешниками')) return img2;
+  if (integrationType.includes('В СП внешники не требуются')) return img3;
   return null;
 };
 
