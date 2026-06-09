@@ -36,12 +36,37 @@ const ChainDetail = ({ chain, onBack }: ChainDetailProps) => {
   const allProblems = filteredProcesses.flatMap(p => p.problems);
   const sberChatLink = processes[0]?.links?.sberChat;
   
-  const getLatestDeadline = (): string => {
+  // 🆕 Дедлайн ИФТ (последняя дата среди незавершённых)
+  const getIftDeadline = (): string => {
     let latestDate: Date | null = null;
     
     filteredProcesses.forEach(process => {
       process.iftStages.forEach(stage => {
-        if (stage.name === 'ИФТ5') {
+        if (stage.name !== 'ПСИ') {
+          const percentForCheck = normalizePercent(stage.percentage);
+          const isNotComplete = percentForCheck < 99.9;
+          if (stage.endDate && stage.endDate !== '' && isNotComplete) {
+            const date = parseDate(stage.endDate);
+            if (date && date instanceof Date && !isNaN(date.getTime())) {
+              if (!latestDate || date > latestDate) {
+                latestDate = date;
+              }
+            }
+          }
+        }
+      });
+    });
+    
+    return latestDate ? formatDateStr(latestDate) : 'Нет';
+  };
+  
+  // 🆕 Дедлайн ПСИ (последняя дата среди незавершённых)
+  const getPsiDeadline = (): string => {
+    let latestDate: Date | null = null;
+    
+    filteredProcesses.forEach(process => {
+      process.iftStages.forEach(stage => {
+        if (stage.name === 'ПСИ') {
           const percentForCheck = normalizePercent(stage.percentage);
           const isNotComplete = percentForCheck < 99.9;
           if (stage.endDate && stage.endDate !== '' && isNotComplete) {
@@ -65,13 +90,23 @@ const ChainDetail = ({ chain, onBack }: ChainDetailProps) => {
         totalProcesses: 0,
         totalProblems: 0,
         avgCompletion: 0,
-        overdueStages: 0
+        overdueStages: 0,
+        avgIftCompletion: 0,
+        avgPsiCompletion: 0,
+        iftDeadline: 'Нет',
+        psiDeadline: 'Нет'
       };
     }
     
     let totalCompletion = 0;
     let overdueCount = 0;
     let totalStages = 0;
+    
+    // Для раздельного подсчёта
+    let totalIftCompletion = 0;
+    let totalIftStages = 0;
+    let totalPsiCompletion = 0;
+    let totalPsiStages = 0;
     
     filteredProcesses.forEach(process => {
       process.iftStages.forEach(stage => {
@@ -87,6 +122,15 @@ const ChainDetail = ({ chain, onBack }: ChainDetailProps) => {
           const percentage = normalizePercent(stage.percentage);
           totalCompletion += percentage;
           totalStages++;
+          
+          // Разделяем по типу этапа
+          if (stage.name === 'ПСИ') {
+            totalPsiCompletion += percentage;
+            totalPsiStages++;
+          } else {
+            totalIftCompletion += percentage;
+            totalIftStages++;
+          }
         }
         
         const endDate = parseDate(stage.endDate);
@@ -102,12 +146,15 @@ const ChainDetail = ({ chain, onBack }: ChainDetailProps) => {
       totalProcesses: filteredProcesses.length,
       totalProblems: allProblems.length,
       avgCompletion: totalStages > 0 ? (totalCompletion / totalStages) : 0,
-      overdueStages: overdueCount
+      overdueStages: overdueCount,
+      avgIftCompletion: totalIftStages > 0 ? (totalIftCompletion / totalIftStages) : 0,
+      avgPsiCompletion: totalPsiStages > 0 ? (totalPsiCompletion / totalPsiStages) : 0,
+      iftDeadline: getIftDeadline(),
+      psiDeadline: getPsiDeadline()
     };
   };
   
   const stats = calculateStats();
-  const latestDeadline = getLatestDeadline();
   
   return (
     <div className={styles.container}>
@@ -135,7 +182,7 @@ const ChainDetail = ({ chain, onBack }: ChainDetailProps) => {
         )}
       </div>
       
-      <StatsWidget stats={stats} nearestDeadline={latestDeadline} />
+      <StatsWidget stats={stats} />
 
       <ProcessStagesWidget 
         processes={filteredProcesses} 

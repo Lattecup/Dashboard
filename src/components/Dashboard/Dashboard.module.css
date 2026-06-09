@@ -37,7 +37,7 @@
 
 .overallGrid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 20px;
 }
 
@@ -65,6 +65,14 @@
 
 .overallValue.overdue {
   color: #f59e0b;
+}
+
+.overallValue.green {
+  color: #10b981;
+}
+
+.overallValue.purple {
+  color: #a855f7;
 }
 
 .overallLabel {
@@ -135,7 +143,7 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 .processProgressName {
@@ -150,6 +158,12 @@
   color: #9ca3af;
   display: block;
   margin-top: 2px;
+}
+
+.processProgressOverall {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .processProgressPercent {
@@ -173,17 +187,41 @@
   color: #ef4444;
 }
 
+/* Детальный прогресс по процессам (ИФТ и ПСИ) */
+.processProgressDetailed {
+  margin: 12px 0;
+}
+
+.processProgressRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.processProgressRow:last-child {
+  margin-bottom: 0;
+}
+
+.processProgressLabel {
+  font-size: 11px;
+  font-weight: 500;
+  width: 40px;
+  flex-shrink: 0;
+  color: #4b5563;
+}
+
 .processProgressBarWrapper {
-  height: 8px;
+  flex: 1;
+  height: 6px;
   background: #e5e7eb;
-  border-radius: 4px;
+  border-radius: 3px;
   overflow: hidden;
-  margin-bottom: 12px;
 }
 
 .processProgressBarFill {
   height: 100%;
-  border-radius: 4px;
+  border-radius: 3px;
   transition: width 0.3s;
 }
 
@@ -208,6 +246,7 @@
   gap: 20px;
   font-size: 12px;
   color: #6b7280;
+  margin-top: 8px;
 }
 
 /* Список цепочек (карточки) */
@@ -235,42 +274,32 @@
   font-size: 16px;
   font-weight: 600;
   color: #1f2937;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
   border-bottom: 2px solid #e5e7eb;
 }
 
-.chainStats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+/* Строка 1: Процессов | Проблем | Просрочено */
+.chainStatsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .statItem {
-  text-align: center;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  flex: 1;
+  justify-content: center;
 }
 
 .statValue {
-  font-size: 24px;
+  font-size: 18px;
   font-weight: 700;
-  display: block;
-}
-
-.statValue.processes {
   color: #1f2937;
-}
-
-.statValue.problems {
-  color: #ef4444;
-}
-
-.statValue.completion {
-  color: #3b82f6;
-}
-
-.statValue.overdue {
-  color: #f59e0b;
 }
 
 .statLabel {
@@ -278,46 +307,70 @@
   color: #6b7280;
 }
 
+.statValue.problems {
+  color: #ef4444;
+}
+
+.statValue.overdue {
+  color: #f59e0b;
+}
+
+/* Строка 2: ИФТ и ПСИ */
+.chainProgressRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 8px 0;
+}
+
+.progressItem {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex: 1;
+  justify-content: center;
+}
+
+.progressLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: #4b5563;
+}
+
+.progressValue {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.progressValue.green {
+  color: #10b981;
+}
+
+.progressValue.blue {
+  color: #3b82f6;
+}
+
+.progressValue.yellow {
+  color: #f59e0b;
+}
+
+.progressValue.red {
+  color: #ef4444;
+}
+
+.divider {
+  width: 1px;
+  height: 20px;
+  background: #e5e7eb;
+}
+
 .chainFooter {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: 12px;
+  justify-content: flex-end;
+  padding-top: 8px;
   border-top: 1px solid #e5e7eb;
-}
-
-.chainProgressMini {
-  flex: 1;
-  margin-right: 12px;
-}
-
-.smallProgressBar {
-  height: 6px;
-  background: #e5e7eb;
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.smallProgressFill {
-  height: 100%;
-  border-radius: 3px;
-  transition: width 0.3s;
-}
-
-.smallProgressFill.green {
-  background: #10b981;
-}
-
-.smallProgressFill.blue {
-  background: #3b82f6;
-}
-
-.smallProgressFill.yellow {
-  background: #f59e0b;
-}
-
-.smallProgressFill.red {
-  background: #ef4444;
 }
 
 .detailLink {
@@ -345,4 +398,66 @@
 .showMoreButton:hover {
   background: #f3f4f6;
   border-color: #3b82f6;
+}
+
+/* Адаптивность */
+@media (max-width: 1200px) {
+  .overallGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard {
+    padding: 16px;
+  }
+  
+  .title {
+    font-size: 24px;
+  }
+  
+  .sectionTitle {
+    font-size: 18px;
+  }
+  
+  .overallGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  
+  .overallValue {
+    font-size: 24px;
+  }
+  
+  .chainsGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .chainStatsRow {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .chainProgressRow {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .processProgressRow {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .overallGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .statValue {
+    font-size: 16px;
+  }
+  
+  .progressValue {
+    font-size: 16px;
+  }
 }

@@ -3,6 +3,7 @@ import styles from './Dashboard.module.css';
 import FileUploader from '../FileUploader/FileUploader';
 import ChainDetail from '../ChainDetail/ChainDetail';
 import Instructions from '../Instructions/Instructions';
+import IntegrationForecastTable from '../IntegrationForecastTable/IntegrationForecastTable';
 import type { Chain, ChainSummary } from '../../types/chain.types';
 import { parseExcelFile, parseDate } from '../utils/excelParser';
 
@@ -32,9 +33,12 @@ const Dashboard = () => {
     return chains.map(chain => {
       let totalProcesses = chain.processes.length;
       let totalProblems = chain.processes.reduce((acc, p) => acc + p.problems.length, 0);
-      let totalCompletion = 0;
-      let totalStages = 0;
       let overdueStages = 0;
+      
+      let totalIftCompletion = 0;
+      let totalIftStages = 0;
+      let totalPsiCompletion = 0;
+      let totalPsiStages = 0;
       
       chain.processes.forEach(process => {
         process.iftStages.forEach(stage => {
@@ -50,8 +54,14 @@ const Dashboard = () => {
           if (hasSteps) {
             let percentage = stage.percentage;
             if (percentage <= 1 && percentage > 0) percentage = percentage * 100;
-            totalCompletion += percentage;
-            totalStages++;
+            
+            if (stage.name === 'ПСИ') {
+              totalPsiCompletion += percentage;
+              totalPsiStages++;
+            } else {
+              totalIftCompletion += percentage;
+              totalIftStages++;
+            }
           }
           
           const endDate = parseDate(stage.endDate);
@@ -69,8 +79,9 @@ const Dashboard = () => {
         name: chain.name,
         totalProcesses,
         totalProblems,
-        avgCompletion: totalStages > 0 ? (totalCompletion / totalStages) : 0,
-        overdueStages
+        overdueStages,
+        avgIftCompletion: totalIftStages > 0 ? (totalIftCompletion / totalIftStages) : 0,
+        avgPsiCompletion: totalPsiStages > 0 ? (totalPsiCompletion / totalPsiStages) : 0
       };
     });
   };
@@ -126,9 +137,12 @@ const Dashboard = () => {
     let totalChains = chains.length;
     let totalProcesses = 0;
     let totalProblems = 0;
-    let totalCompletion = 0;
-    let totalStages = 0;
     let totalOverdue = 0;
+    
+    let totalIftCompletion = 0;
+    let totalIftStages = 0;
+    let totalPsiCompletion = 0;
+    let totalPsiStages = 0;
     
     chains.forEach(chain => {
       totalProcesses += chain.processes.length;
@@ -147,8 +161,14 @@ const Dashboard = () => {
           if (hasSteps) {
             let percentage = stage.percentage;
             if (percentage <= 1 && percentage > 0) percentage = percentage * 100;
-            totalCompletion += percentage;
-            totalStages++;
+            
+            if (stage.name === 'ПСИ') {
+              totalPsiCompletion += percentage;
+              totalPsiStages++;
+            } else {
+              totalIftCompletion += percentage;
+              totalIftStages++;
+            }
           }
           
           const endDate = parseDate(stage.endDate);
@@ -166,8 +186,9 @@ const Dashboard = () => {
       totalChains,
       totalProcesses,
       totalProblems,
-      avgCompletion: totalStages > 0 ? (totalCompletion / totalStages) : 0,
-      totalOverdue
+      totalOverdue,
+      avgIftCompletion: totalIftStages > 0 ? (totalIftCompletion / totalIftStages) : 0,
+      avgPsiCompletion: totalPsiStages > 0 ? (totalPsiCompletion / totalPsiStages) : 0
     };
   };
 
@@ -227,8 +248,12 @@ const Dashboard = () => {
                   <div className={styles.overallLabel}>⚠️ Всего проблем</div>
                 </div>
                 <div className={styles.overallCard}>
-                  <div className={`${styles.overallValue} ${styles.primary}`}>{Math.round(overall.avgCompletion)}%</div>
-                  <div className={styles.overallLabel}>📈 Общая готовность</div>
+                  <div className={`${styles.overallValue} ${styles.green}`}>{Math.round(overall.avgIftCompletion)}%</div>
+                  <div className={styles.overallLabel}>🔷 Готовность ИФТ</div>
+                </div>
+                <div className={styles.overallCard}>
+                  <div className={`${styles.overallValue} ${styles.purple}`}>{Math.round(overall.avgPsiCompletion)}%</div>
+                  <div className={styles.overallLabel}>🟣 Готовность ПСИ</div>
                 </div>
                 <div className={styles.overallCard}>
                   <div className={`${styles.overallValue} ${styles.overdue}`}>{overall.totalOverdue}</div>
@@ -254,7 +279,37 @@ const Dashboard = () => {
               <div className={styles.accordionContent}>
                 <div className={styles.processesProgressList}>
                   {displayedProcesses.map((process, idx) => {
-                    const percentColor = getPercentColor(process.percentage);
+                    // Находим реальные данные процесса из chains
+                    const processData = chains.find(chain => 
+                      chain.processes.some(p => p.name === process.name)
+                    )?.processes.find(p => p.name === process.name);
+                    
+                    let iftProgress = 0;
+                    let psiProgress = 0;
+                    
+                    if (processData) {
+                      let totalIftSteps = 0;
+                      let completedIftSteps = 0;
+                      let totalPsiSteps = 0;
+                      let completedPsiSteps = 0;
+                      
+                      processData.iftStages.forEach(stage => {
+                        if (stage.name === 'ПСИ') {
+                          totalPsiSteps += stage.totalSteps;
+                          completedPsiSteps += stage.completedSteps;
+                        } else {
+                          totalIftSteps += stage.totalSteps;
+                          completedIftSteps += stage.completedSteps;
+                        }
+                      });
+                      
+                      iftProgress = totalIftSteps > 0 ? Math.round((completedIftSteps / totalIftSteps) * 100) : 0;
+                      psiProgress = totalPsiSteps > 0 ? Math.round((completedPsiSteps / totalPsiSteps) * 100) : 0;
+                    }
+                    
+                    const iftColor = getPercentColor(iftProgress);
+                    const psiColor = getPercentColor(psiProgress);
+                    
                     return (
                       <div key={idx} className={styles.processProgressItem}>
                         <div className={styles.processProgressHeader}>
@@ -262,18 +317,41 @@ const Dashboard = () => {
                             <span className={styles.processProgressName}>{process.name}</span>
                             <span className={styles.processProgressChain}>{process.chainName}</span>
                           </div>
-                          <span className={`${styles.processProgressPercent} ${styles[percentColor]}`}>
-                            {Math.round(process.percentage)}%
-                          </span>
+                          <div className={styles.processProgressOverall}>
+                            <span className={`${styles.processProgressPercent} ${styles[getPercentColor(process.percentage)]}`}>
+                              {Math.round(process.percentage)}%
+                            </span>
+                          </div>
                         </div>
-                        <div className={styles.processProgressBarWrapper}>
-                          <div 
-                            className={`${styles.processProgressBarFill} ${styles[percentColor]}`}
-                            style={{ width: `${process.percentage}%` }}
-                          />
+                        
+                        <div className={styles.processProgressDetailed}>
+                          <div className={styles.processProgressRow}>
+                            <span className={styles.processProgressLabel}>🔷 ИФТ</span>
+                            <div className={styles.processProgressBarWrapper}>
+                              <div 
+                                className={`${styles.processProgressBarFill} ${styles[iftColor]}`}
+                                style={{ width: `${iftProgress}%` }}
+                              />
+                            </div>
+                            <span className={`${styles.processProgressPercent} ${styles[iftColor]}`}>
+                              {iftProgress}%
+                            </span>
+                          </div>
+                          <div className={styles.processProgressRow}>
+                            <span className={styles.processProgressLabel}>🟣 ПСИ</span>
+                            <div className={styles.processProgressBarWrapper}>
+                              <div 
+                                className={`${styles.processProgressBarFill} ${styles[psiColor]}`}
+                                style={{ width: `${psiProgress}%` }}
+                              />
+                            </div>
+                            <span className={`${styles.processProgressPercent} ${styles[psiColor]}`}>
+                              {psiProgress}%
+                            </span>
+                          </div>
                         </div>
+                        
                         <div className={styles.processProgressStats}>
-                          <span>📋 {process.stages} этапов</span>
                           <span>⚠️ {process.problems} проблем</span>
                         </div>
                       </div>
@@ -296,7 +374,8 @@ const Dashboard = () => {
           <h2 className={styles.sectionTitle}>📋 Список цепочек</h2>
           <div className={styles.chainsGrid}>
             {summaries.map(summary => {
-              const percentColor = getPercentColor(summary.avgCompletion);
+              const iftColor = getPercentColor(summary.avgIftCompletion);
+              const psiColor = getPercentColor(summary.avgPsiCompletion);
               return (
                 <div 
                   key={summary.id} 
@@ -304,39 +383,55 @@ const Dashboard = () => {
                   onClick={() => setSelectedChainId(summary.id)}
                 >
                   <div className={styles.chainName}>{summary.name}</div>
-                  <div className={styles.chainStats}>
+                  
+                  <div className={styles.chainStatsRow}>
                     <div className={styles.statItem}>
-                      <span className={`${styles.statValue} ${styles.processes}`}>{summary.totalProcesses}</span>
-                      <span className={styles.statLabel}>Процессов</span>
+                      <span className={styles.statValue}>{summary.totalProcesses}</span>
+                      <span className={styles.statLabel}>процессов</span>
                     </div>
+                    
+                    <div className={styles.divider}></div>
+                    
                     <div className={styles.statItem}>
                       <span className={`${styles.statValue} ${styles.problems}`}>{summary.totalProblems}</span>
-                      <span className={styles.statLabel}>Проблем</span>
+                      <span className={styles.statLabel}>проблем</span>
                     </div>
-                    <div className={styles.statItem}>
-                      <span className={`${styles.statValue} ${styles.completion}`}>{Math.round(summary.avgCompletion)}%</span>
-                      <span className={styles.statLabel}>Готовность</span>
-                    </div>
+                    
+                    <div className={styles.divider}></div>
+                    
                     <div className={styles.statItem}>
                       <span className={`${styles.statValue} ${styles.overdue}`}>{summary.overdueStages}</span>
-                      <span className={styles.statLabel}>Просрочено</span>
+                      <span className={styles.statLabel}>просрочено</span>
                     </div>
                   </div>
-                  <div className={styles.chainFooter}>
-                    <div className={styles.chainProgressMini}>
-                      <div className={styles.smallProgressBar}>
-                        <div 
-                          className={`${styles.smallProgressFill} ${styles[percentColor]}`}
-                          style={{ width: `${summary.avgCompletion}%` }}
-                        />
-                      </div>
+                  
+                  <div className={styles.chainProgressRow}>
+                    <div className={styles.progressItem}>
+                      <span className={styles.progressLabel}>🔷 ИФТ</span>
+                      <span className={`${styles.progressValue} ${styles[iftColor]}`}>
+                        {Math.round(summary.avgIftCompletion)}%
+                      </span>
                     </div>
+                    
+                    <div className={styles.divider}></div>
+                    
+                    <div className={styles.progressItem}>
+                      <span className={styles.progressLabel}>🟣 ПСИ</span>
+                      <span className={`${styles.progressValue} ${styles[psiColor]}`}>
+                        {Math.round(summary.avgPsiCompletion)}%
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className={styles.chainFooter}>
                     <span className={styles.detailLink}>Подробнее →</span>
                   </div>
                 </div>
               );
             })}
           </div>
+          
+          <IntegrationForecastTable chains={chains} />
         </>
       )}
     </div>

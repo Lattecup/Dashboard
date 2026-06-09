@@ -336,3 +336,12 @@
   z-index: 15;
   pointer-events: none;
 }
+
+.integrationIcon {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 4px;
+}
+

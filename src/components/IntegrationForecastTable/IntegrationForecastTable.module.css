@@ -1,0 +1,184 @@
+.container {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  margin-top: 32px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.filterWrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filterLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: #4b5563;
+}
+
+.filterSelect {
+  padding: 6px 12px;
+  font-size: 13px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  color: #1f2937;
+  min-width: 180px;
+}
+
+.filterSelect:hover {
+  border-color: #3b82f6;
+}
+
+.filterSelect:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.tableWrapper {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table th {
+  text-align: left;
+  padding: 12px 12px;
+  background: #f9fafb;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.table td {
+  padding: 12px 12px;
+  border-bottom: 1px solid #f3f4f6;
+  vertical-align: middle;
+}
+
+.chainCell {
+  font-weight: 600;
+  color: #1f2937;
+  background: #fafafa;
+  vertical-align: top;
+}
+
+.processCell {
+  color: #4b5563;
+}
+
+.dateCell {
+  color: #6b7280;
+  font-family: monospace;
+  font-size: 12px;
+}
+
+/* Стили для Прогноз ВНЕШ */
+.forecastNa {
+  color: #9ca3af;
+}
+
+.forecastTbd {
+  color: #f59e0b;
+  font-weight: 500;
+}
+
+.statusCell {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.statusCell.green {
+  color: #10b981;
+}
+
+.statusCell.blue {
+  color: #3b82f6;
+}
+
+.statusCell.yellow {
+  color: #f59e0b;
+}
+
+.statusCell.red {
+  color: #ef4444;
+}
+
+/* NA в статусе — такой же стиль, как в прогнозе, но с сохранением размера шрифта */
+.statusCell.statusNa {
+  color: #9ca3af;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.empty {
+  text-align: center;
+  padding: 40px;
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+  
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .title {
+    font-size: 16px;
+  }
+  
+  .filterWrapper {
+    width: 100%;
+  }
+  
+  .filterSelect {
+    flex: 1;
+  }
+  
+  .table th,
+  .table td {
+    padding: 8px 8px;
+  }
+  
+  .statusCell {
+    font-size: 12px;
+  }
+  
+  .statusCell.statusNa {
+    font-size: 12px;
+  }
+}

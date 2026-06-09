@@ -3,10 +3,9 @@ import type { ChainStats } from '../../types/chain.types';
 
 interface StatsWidgetProps {
   stats: ChainStats;
-  nearestDeadline?: string;
 }
 
-const StatsWidget = ({ stats, nearestDeadline }: StatsWidgetProps) => {
+const StatsWidget = ({ stats }: StatsWidgetProps) => {
   // Функция для скролла к списку проблем
   const scrollToProblems = () => {
     const problemsSection = document.getElementById('problems-section');
@@ -24,7 +23,6 @@ const StatsWidget = ({ stats, nearestDeadline }: StatsWidgetProps) => {
           <div className={styles.label}>📋 Всего процессов</div>
         </div>
         
-        {/* ТОЛЬКО ЭТОТ БЛОК ИЗМЕНИЛ — добавил onClick и cursor */}
         <div 
           className={`${styles.card} ${styles.critical}`}
           onClick={scrollToProblems}
@@ -34,20 +32,30 @@ const StatsWidget = ({ stats, nearestDeadline }: StatsWidgetProps) => {
           <div className={styles.label}>⚠️ Всего проблем</div>
         </div>
         
-        <div className={`${styles.card} ${styles.blue}`}>
-          <div className={styles.value}>{Math.round(stats.avgCompletion)}%</div>
-          <div className={styles.label}>📈 Средняя готовность</div>
+        <div className={`${styles.card} ${styles.green}`}>
+          <div className={styles.value}>{Math.round(stats.avgIftCompletion)}%</div>
+          <div className={styles.label}>🔷 Готовность ИФТ</div>
         </div>
+        
+        <div className={`${styles.card} ${styles.purple}`}>
+          <div className={styles.value}>{Math.round(stats.avgPsiCompletion)}%</div>
+          <div className={styles.label}>🟣 Готовность ПСИ</div>
+        </div>
+        
         <div className={`${styles.card} ${styles.warning}`}>
           <div className={styles.value}>{stats.overdueStages}</div>
           <div className={styles.label}>⏰ Просроченных этапов</div>
         </div>
-        {nearestDeadline && (
-          <div className={`${styles.card} ${styles.deadline}`}>
-            <div className={styles.value}>{nearestDeadline}</div>
-            <div className={styles.label}>📅 Дедлайн</div>
-          </div>
-        )}
+        
+        <div className={`${styles.card} ${styles.iftDeadline}`}>
+          <div className={styles.value}>{stats.iftDeadline || 'Нет'}</div>
+          <div className={styles.label}>📅 Дедлайн ИФТ</div>
+        </div>
+        
+        <div className={`${styles.card} ${styles.psiDeadline}`}>
+          <div className={styles.value}>{stats.psiDeadline || 'Нет'}</div>
+          <div className={styles.label}>📅 Дедлайн ПСИ</div>
+        </div>
       </div>
     </div>
   );

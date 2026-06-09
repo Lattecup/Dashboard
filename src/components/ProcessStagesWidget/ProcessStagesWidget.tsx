@@ -16,15 +16,47 @@ const formatDateShort = (date: Date | null): string => {
   return `${day}.${month}`;
 };
 
+// Цвет фона полоски (barTrack)
+const getBarTrackColor = (stageName: string): string => {
+  if (stageName === 'ПСИ') {
+    return '#f3e8ff';
+  }
+  return '#f3f4f6';
+};
+
+// Цвет заливки прогресса (fill)
+const getFillColor = (stageName: string): string => {
+  if (stageName === 'ПСИ') {
+    return '#a855f7';
+  }
+  return '#34d399';
+};
+
+// Цвет шагов (stepsLabel)
 const getStepColor = (stage: any): string => {
   const percentage = stage.percentage;
   const endDate = parseDate(stage.endDateRaw);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
-  if (percentage >= 99.9) return '#059669';
-  if (endDate && endDate < today) return '#dc2626';
+  if (percentage >= 99.9) {
+    return stage.stageName === 'ПСИ' ? '#a855f7' : '#059669';
+  }
+  
+  if (endDate && endDate < today) {
+    return '#dc2626';
+  }
+  
   return '#4b5563';
+};
+
+// Получить картинку для интеграции
+const getIntegrationIcon = (integrationType?: string): string | null => {
+  if (!integrationType) return null;
+  if (integrationType.includes('Внутри ERP')) return '/images/img1.png';
+  if (integrationType.includes('С внешниками')) return '/images/img2.png';
+  if (integrationType.includes('В СП внешники не требуются')) return '/images/img3.png';
+  return null;
 };
 
 const ProcessStagesWidget = ({ processes, selectedProcess = 'all' }: GanttChartProps) => {
@@ -51,6 +83,7 @@ const ProcessStagesWidget = ({ processes, selectedProcess = 'all' }: GanttChartP
         completedSteps: stage.completedSteps,
         totalSteps: stage.totalSteps,
         description: stage.description,
+        integrationType: stage.integrationType,
       });
     });
   });
@@ -77,7 +110,7 @@ const ProcessStagesWidget = ({ processes, selectedProcess = 'all' }: GanttChartP
     }
   });
   
-  const stageOrder = ['ИФТ1', 'ИФТ2', 'ИФТ3', 'ИФТ4', 'ИФТ5'];
+  const stageOrder = ['ИФТ1', 'ИФТ2', 'ИФТ3', 'ИФТ4', 'ИФТ5', 'ПСИ'];
   for (const stages of stagesByProcess.values()) {
     stages.sort((a, b) => stageOrder.indexOf(a.stageName) - stageOrder.indexOf(b.stageName));
   }
@@ -272,6 +305,8 @@ const ProcessStagesWidget = ({ processes, selectedProcess = 'all' }: GanttChartP
                       const isTBD = stage.totalSteps === 0 && stage.completedSteps > 0;
                       const displayTotal = isTBD ? 'TBD' : stage.totalSteps;
                       const isFull = displayPercent >= 100;
+                      const barTrackColor = getBarTrackColor(stage.stageName);
+                      const fillColor = getFillColor(stage.stageName);
                       
                       const nextStage = array[index + 1];
                       const isLastStage = index === array.length - 1;
@@ -283,11 +318,23 @@ const ProcessStagesWidget = ({ processes, selectedProcess = 'all' }: GanttChartP
                         marginBottom = nextStageLines === 0 ? 24 : 36 + nextStageLines * 12;
                       }
                       
+                      const iconSrc = getIntegrationIcon(stage.integrationType);
+                      const hasIntegrationIcon = !!iconSrc;
+                      const isPsiWithoutDesc = stage.stageName === 'ПСИ' && !stage.description;
+                      
+                      let finalMarginBottom = marginBottom;
+                      if (hasIntegrationIcon) {
+                        finalMarginBottom = Math.max(finalMarginBottom, 70);
+                      }
+                      if (isPsiWithoutDesc && !hasIntegrationIcon) {
+                        finalMarginBottom = Math.max(finalMarginBottom, 24);
+                      }
+                      
                       return (
                         <div 
                           key={stage.id} 
                           className={styles.stageWrapper}
-                          style={{ marginBottom: `${marginBottom}px` }}
+                          style={{ marginBottom: `${finalMarginBottom}px` }}
                         >
                           {stage.description && (
                             <div 
@@ -297,13 +344,22 @@ const ProcessStagesWidget = ({ processes, selectedProcess = 'all' }: GanttChartP
                               {stage.description}
                             </div>
                           )}
+                          
                           <div 
                             className={styles.barTrack}
-                            style={{ left: `${startPos}%`, width: `${barWidth}%` }}
+                            style={{ 
+                              left: `${startPos}%`, 
+                              width: `${barWidth}%`,
+                              backgroundColor: barTrackColor,
+                              marginTop: isPsiWithoutDesc ? '28px' : '0px'
+                            }}
                           >
                             <div 
                               className={`${styles.fill} ${isFull ? styles.fillFull : ''}`}
-                              style={{ width: `${displayPercent}%` }}
+                              style={{ 
+                                width: `${displayPercent}%`, 
+                                backgroundColor: fillColor
+                              }}
                             />
                             <div className={styles.stageContent}>
                               <span className={styles.percentLabel}>{displayPercent}%</span>
@@ -315,12 +371,30 @@ const ProcessStagesWidget = ({ processes, selectedProcess = 'all' }: GanttChartP
                           
                           <div 
                             className={styles.endDateDot}
-                            style={{ left: `${endPos}%` }}
+                            style={{ 
+                              left: `${endPos}%`,
+                              top: isPsiWithoutDesc ? '56px' : '28px'
+                            }}
                           >
-                            <div className={styles.endDateDotPoint} />
-                            <div className={styles.endDateDotLabel}>
-                              {stage.endDate ? formatDateShort(stage.endDate) : 'TBD'}
-                            </div>
+                            {iconSrc ? (
+                              <>
+                                <img 
+                                  src={iconSrc} 
+                                  className={styles.integrationIcon}
+                                  alt="integration"
+                                />
+                                <div className={styles.endDateDotLabel}>
+                                  {stage.endDate ? formatDateShort(stage.endDate) : 'TBD'}
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <div className={styles.endDateDotPoint} />
+                                <div className={styles.endDateDotLabel}>
+                                  {stage.endDate ? formatDateShort(stage.endDate) : 'TBD'}
+                                </div>
+                              </>
+                            )}
                           </div>
                         </div>
                       );

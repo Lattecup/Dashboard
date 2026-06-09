@@ -255,6 +255,48 @@ const findColumns = (rawData: any[][]) => {
       else if (normalizedCell.includes('% прохождения ифт5')) {
         if (!columnMap.has('ift5_percent')) columnMap.set('ift5_percent', { row: rowIdx, col: colIdx });
       }
+      // Интеграции с внешниками ИФТ1-5
+      else if (normalizedCell === normalizeName('Интеграции с внешниками ИФТ1')) {
+        if (!columnMap.has('integration1')) columnMap.set('integration1', { row: rowIdx, col: colIdx });
+        console.log(`✅ Найдена колонка "integration1" в строке ${rowIdx}, колонка ${colIdx}: "${cell}"`);
+      }
+      else if (normalizedCell === normalizeName('Интеграции с внешниками ИФТ2')) {
+        if (!columnMap.has('integration2')) columnMap.set('integration2', { row: rowIdx, col: colIdx });
+      }
+      else if (normalizedCell === normalizeName('Интеграции с внешниками ИФТ3')) {
+        if (!columnMap.has('integration3')) columnMap.set('integration3', { row: rowIdx, col: colIdx });
+      }
+      else if (normalizedCell === normalizeName('Интеграции с внешниками ИФТ4')) {
+        if (!columnMap.has('integration4')) columnMap.set('integration4', { row: rowIdx, col: colIdx });
+      }
+      else if (normalizedCell === normalizeName('Интеграции с внешниками ИФТ5')) {
+        if (!columnMap.has('integration5')) columnMap.set('integration5', { row: rowIdx, col: colIdx });
+      }
+      // ПСИ (новые колонки)
+      else if (normalizedCell.includes('что делается в пси') || normalizedCell.includes('пси описание')) {
+        if (!columnMap.has('psi_desc')) columnMap.set('psi_desc', { row: rowIdx, col: colIdx });
+        console.log(`✅ Найдена колонка "psi_desc" в строке ${rowIdx}, колонка ${colIdx}: "${cell}"`);
+      }
+      else if (normalizedCell.includes('статус пси')) {
+        if (!columnMap.has('psi_status')) columnMap.set('psi_status', { row: rowIdx, col: colIdx });
+      }
+      else if (normalizedCell.includes('старт пси')) {
+        if (!columnMap.has('psi_start')) columnMap.set('psi_start', { row: rowIdx, col: colIdx });
+      }
+      else if (normalizedCell.includes('финиш пси')) {
+        if (!columnMap.has('psi_end')) columnMap.set('psi_end', { row: rowIdx, col: colIdx });
+      }
+      else if (normalizedCell.includes('пройдено шагов пси') || normalizedCell.includes('пройден шогов п')) {
+        if (!columnMap.has('psi_completed')) columnMap.set('psi_completed', { row: rowIdx, col: colIdx });
+        console.log(`✅ Найдена колонка "psi_completed" в строке ${rowIdx}, колонка ${colIdx}: "${cell}"`);
+      }
+      else if (normalizedCell.includes('сколько шагов пси') || normalizedCell.includes('сколько шогов п')) {
+        if (!columnMap.has('psi_total')) columnMap.set('psi_total', { row: rowIdx, col: colIdx });
+        console.log(`✅ Найдена колонка "psi_total" в строке ${rowIdx}, колонка ${colIdx}: "${cell}"`);
+      }
+      else if (normalizedCell.includes('% прохождения пси')) {
+        if (!columnMap.has('psi_percent')) columnMap.set('psi_percent', { row: rowIdx, col: colIdx });
+      }
       // Ссылки
       else if (normalizedCell === normalizeName('Результаты (Confl)') || 
                normalizedCell === normalizeName('Confluence')) {
@@ -337,11 +379,11 @@ export const parseExcelFile = (file: File): Promise<Chain[]> => {
         const iftStages: IFTStage[] = [];
         
         const iftData = [
-          { num: 1, desc: columnMap.get('ift1_desc'), status: columnMap.get('ift1_status'), start: columnMap.get('ift1_start'), end: columnMap.get('ift1_end'), completed: columnMap.get('ift1_completed'), total: columnMap.get('ift1_total'), percent: columnMap.get('ift1_percent') },
-          { num: 2, desc: columnMap.get('ift2_desc'), status: columnMap.get('ift2_status'), start: columnMap.get('ift2_start'), end: columnMap.get('ift2_end'), completed: columnMap.get('ift2_completed'), total: columnMap.get('ift2_total'), percent: columnMap.get('ift2_percent') },
-          { num: 3, desc: columnMap.get('ift3_desc'), status: columnMap.get('ift3_status'), start: columnMap.get('ift3_start'), end: columnMap.get('ift3_end'), completed: columnMap.get('ift3_completed'), total: columnMap.get('ift3_total'), percent: columnMap.get('ift3_percent') },
-          { num: 4, desc: columnMap.get('ift4_desc'), status: columnMap.get('ift4_status'), start: columnMap.get('ift4_start'), end: columnMap.get('ift4_end'), completed: columnMap.get('ift4_completed'), total: columnMap.get('ift4_total'), percent: columnMap.get('ift4_percent') },
-          { num: 5, desc: columnMap.get('ift5_desc'), status: columnMap.get('ift5_status'), start: columnMap.get('ift5_start'), end: columnMap.get('ift5_end'), completed: columnMap.get('ift5_completed'), total: columnMap.get('ift5_total'), percent: columnMap.get('ift5_percent') }
+          { num: 1, desc: columnMap.get('ift1_desc'), status: columnMap.get('ift1_status'), start: columnMap.get('ift1_start'), end: columnMap.get('ift1_end'), completed: columnMap.get('ift1_completed'), total: columnMap.get('ift1_total'), percent: columnMap.get('ift1_percent'), integration: columnMap.get('integration1') },
+          { num: 2, desc: columnMap.get('ift2_desc'), status: columnMap.get('ift2_status'), start: columnMap.get('ift2_start'), end: columnMap.get('ift2_end'), completed: columnMap.get('ift2_completed'), total: columnMap.get('ift2_total'), percent: columnMap.get('ift2_percent'), integration: columnMap.get('integration2') },
+          { num: 3, desc: columnMap.get('ift3_desc'), status: columnMap.get('ift3_status'), start: columnMap.get('ift3_start'), end: columnMap.get('ift3_end'), completed: columnMap.get('ift3_completed'), total: columnMap.get('ift3_total'), percent: columnMap.get('ift3_percent'), integration: columnMap.get('integration3') },
+          { num: 4, desc: columnMap.get('ift4_desc'), status: columnMap.get('ift4_status'), start: columnMap.get('ift4_start'), end: columnMap.get('ift4_end'), completed: columnMap.get('ift4_completed'), total: columnMap.get('ift4_total'), percent: columnMap.get('ift4_percent'), integration: columnMap.get('integration4') },
+          { num: 5, desc: columnMap.get('ift5_desc'), status: columnMap.get('ift5_status'), start: columnMap.get('ift5_start'), end: columnMap.get('ift5_end'), completed: columnMap.get('ift5_completed'), total: columnMap.get('ift5_total'), percent: columnMap.get('ift5_percent'), integration: columnMap.get('integration5') }
         ];
         
         for (const ift of iftData) {
@@ -359,7 +401,22 @@ export const parseExcelFile = (file: File): Promise<Chain[]> => {
             percentage = (completedSteps / totalSteps) * 100;
           }
           
-          console.log(`ИФТ${ift.num}: completed=${completedSteps}, total=${totalSteps}, percentFromExcel=${ift.percent ? getValue(row, ift.percent) : 'no column'}, calculated=${percentage}`);
+          // 🆕 Чтение интеграции с поддержкой фразы "Внешники не требуются"
+          let integrationType = '';
+          if (ift.integration) {
+            const rawValue = String(getValue(row, ift.integration) || '').trim();
+            if (rawValue.includes('Внутри ERP') || rawValue.includes('Внешники не требуются')) {
+              integrationType = 'Внутри ERP'; // картинка img1.jpg
+            }
+            else if (rawValue.includes('С внешниками')) {
+              integrationType = 'С внешниками'; // картинка img2.jpg
+            }
+            else if (rawValue.includes('В СП внешники не требуются')) {
+              integrationType = 'В СП внешники не требуются'; // картинка img3.jpg
+            }
+          }
+          
+          console.log(`ИФТ${ift.num}: completed=${completedSteps}, total=${totalSteps}, percentFromExcel=${ift.percent ? getValue(row, ift.percent) : 'no column'}, calculated=${percentage}, integration=${integrationType}`);
           iftStages.push({
             id: `${chainName}_${processName}_ИФТ${ift.num}`,
             name: `ИФТ${ift.num}`,
@@ -369,7 +426,47 @@ export const parseExcelFile = (file: File): Promise<Chain[]> => {
             endDate: endDateVal ? formatDate(endDateVal) : '',
             totalSteps: totalSteps,
             completedSteps: completedSteps,
-            percentage: percentage
+            percentage: percentage,
+            integrationType: integrationType
+          });
+        }
+        
+        // ПСИ (добавляем только если есть данные)
+        const psiDesc = columnMap.get('psi_desc');
+        const psiStart = columnMap.get('psi_start');
+        const psiEnd = columnMap.get('psi_end');
+        const psiCompleted = columnMap.get('psi_completed');
+        const psiTotal = columnMap.get('psi_total');
+        const psiPercent = columnMap.get('psi_percent');
+        const psiStatus = columnMap.get('psi_status');
+        
+        const psiDescription = psiDesc ? String(getValue(row, psiDesc) || '') : '';
+        const hasPsiData = psiDescription || psiStart || psiTotal || psiEnd;
+        
+        if (hasPsiData) {
+          const status = psiStatus ? String(getValue(row, psiStatus) || '') : '';
+          const startDateVal = psiStart ? getValue(row, psiStart) : '';
+          const endDateVal = psiEnd ? getValue(row, psiEnd) : '';
+          const completedSteps = psiCompleted ? getNumber(getValue(row, psiCompleted)) : 0;
+          const totalSteps = psiTotal ? getNumber(getValue(row, psiTotal)) : 0;
+          let percentage = psiPercent ? getPercentage(getValue(row, psiPercent)) : 0;
+          
+          if (percentage === 0 && totalSteps > 0 && completedSteps > 0) {
+            percentage = (completedSteps / totalSteps) * 100;
+          }
+          
+          console.log(`ПСИ: completed=${completedSteps}, total=${totalSteps}, percentage=${percentage}`);
+          iftStages.push({
+            id: `${chainName}_${processName}_ПСИ`,
+            name: 'ПСИ',
+            description: psiDescription,
+            status: status,
+            startDate: startDateVal ? formatDate(startDateVal) : '',
+            endDate: endDateVal ? formatDate(endDateVal) : '',
+            totalSteps: totalSteps,
+            completedSteps: completedSteps,
+            percentage: percentage,
+            integrationType: '' // ПСИ без интеграции
           });
         }
         

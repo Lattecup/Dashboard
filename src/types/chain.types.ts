@@ -9,6 +9,7 @@ export interface IFTStage {
   totalSteps: number;        // Сколько шагов ИФТ
   completedSteps: number;    // Сколько прошли успешно шагов
   percentage: number;        // % прохождения
+  integrationType?: string;  // Интеграция с внешниками
 }
 
 // Проблема
@@ -72,6 +73,10 @@ export interface ChainStats {
   totalProblems: number;
   avgCompletion: number;
   overdueStages: number;
+  avgIftCompletion: number;
+  avgPsiCompletion: number;
+  iftDeadline?: string;
+  psiDeadline?: string;
 }
 
 // Сводка по цепочке для главной страницы
@@ -80,6 +85,7 @@ export interface ChainSummary {
   name: string;
   totalProcesses: number;
   totalProblems: number;
-  avgCompletion: number;
   overdueStages: number;
+  avgIftCompletion: number;
+  avgPsiCompletion: number;
 }
