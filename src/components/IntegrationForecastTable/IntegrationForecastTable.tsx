@@ -24,11 +24,6 @@ const formatDateShort = (date: Date | null): string => {
   return `${day}.${month}.${year}`;
 };
 
-const normalizePercent = (value: number): number => {
-  if (value <= 1 && value > 0) return value * 100;
-  return value;
-};
-
 const getIntegrationType = (integrationValue: string): 'inside' | 'outside' | 'none' => {
   if (!integrationValue) return 'none';
   if (integrationValue.includes('Внешники не требуются') || 
