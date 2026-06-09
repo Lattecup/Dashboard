@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import styles from './IntegrationForecastTable.module.css';
 import type { Chain } from '../../types/chain.types';
 import { parseDate } from '../utils/excelParser';
