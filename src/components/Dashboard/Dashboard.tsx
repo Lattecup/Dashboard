@@ -29,14 +29,33 @@ const Dashboard = () => {
     }
   };
 
+  const getPercentColor = (percentage: number) => {
+    if (percentage >= 80) return 'green';
+    if (percentage >= 50) return 'blue';
+    if (percentage >= 25) return 'yellow';
+    return 'red';
+  };
+
+  const getPercentDisplay = (value: number): string => {
+    if (value === -1) return 'NA';
+    return `${Math.round(value)}%`;
+  };
+
+  const getPercentColorClass = (value: number): string => {
+    if (value === -1) return 'na';
+    return getPercentColor(value);
+  };
+
   const calculateSummary = (): ChainSummary[] => {
     return chains.map(chain => {
       let totalProcesses = chain.processes.length;
       let totalProblems = chain.processes.reduce((acc, p) => acc + p.problems.length, 0);
       let overdueStages = 0;
       
-      let totalIftCompletion = 0;
-      let totalIftStages = 0;
+      let totalIftInsideCompletion = 0;
+      let totalIftInsideStages = 0;
+      let totalIftOutsideCompletion = 0;
+      let totalIftOutsideStages = 0;
       let totalPsiCompletion = 0;
       let totalPsiStages = 0;
       
@@ -59,8 +78,20 @@ const Dashboard = () => {
               totalPsiCompletion += percentage;
               totalPsiStages++;
             } else {
-              totalIftCompletion += percentage;
-              totalIftStages++;
+              const integrationType = stage.integrationType || '';
+              const isInside = integrationType.includes('Внутри ERP') || 
+                               integrationType.includes('Внешники не требуются') || 
+                               integrationType.includes('В СП внешники не требуются');
+              const isOutside = integrationType.includes('С внешниками');
+              
+              if (isInside) {
+                totalIftInsideCompletion += percentage;
+                totalIftInsideStages++;
+              }
+              if (isOutside) {
+                totalIftOutsideCompletion += percentage;
+                totalIftOutsideStages++;
+              }
             }
           }
           
@@ -80,7 +111,8 @@ const Dashboard = () => {
         totalProcesses,
         totalProblems,
         overdueStages,
-        avgIftCompletion: totalIftStages > 0 ? (totalIftCompletion / totalIftStages) : 0,
+        avgIftInsideCompletion: totalIftInsideStages > 0 ? (totalIftInsideCompletion / totalIftInsideStages) : -1,
+        avgIftOutsideCompletion: totalIftOutsideStages > 0 ? (totalIftOutsideCompletion / totalIftOutsideStages) : -1,
         avgPsiCompletion: totalPsiStages > 0 ? (totalPsiCompletion / totalPsiStages) : 0
       };
     });
@@ -122,13 +154,6 @@ const Dashboard = () => {
     });
     
     return allProcesses.sort((a, b) => b.percentage - a.percentage);
-  };
-
-  const getPercentColor = (percentage: number) => {
-    if (percentage >= 80) return 'green';
-    if (percentage >= 50) return 'blue';
-    if (percentage >= 25) return 'yellow';
-    return 'red';
   };
 
   const getOverallStats = () => {
@@ -218,7 +243,7 @@ const Dashboard = () => {
 
   return (
     <div className={styles.dashboard}>
-      <h1 className={styles.title}>Статус СП</h1>
+      <h1 className={styles.title}>Статус ИФТ</h1>
       <p className={styles.subtitle}>Загрузите Excel файл с данными по сквозным цепочкам</p>
 
       <Instructions />
@@ -279,7 +304,6 @@ const Dashboard = () => {
               <div className={styles.accordionContent}>
                 <div className={styles.processesProgressList}>
                   {displayedProcesses.map((process, idx) => {
-                    // Находим реальные данные процесса из chains
                     const processData = chains.find(chain => 
                       chain.processes.some(p => p.name === process.name)
                     )?.processes.find(p => p.name === process.name);
@@ -374,8 +398,6 @@ const Dashboard = () => {
           <h2 className={styles.sectionTitle}>📋 Список цепочек</h2>
           <div className={styles.chainsGrid}>
             {summaries.map(summary => {
-              const iftColor = getPercentColor(summary.avgIftCompletion);
-              const psiColor = getPercentColor(summary.avgPsiCompletion);
               return (
                 <div 
                   key={summary.id} 
@@ -407,9 +429,18 @@ const Dashboard = () => {
                   
                   <div className={styles.chainProgressRow}>
                     <div className={styles.progressItem}>
-                      <span className={styles.progressLabel}>🔷 ИФТ</span>
-                      <span className={`${styles.progressValue} ${styles[iftColor]}`}>
-                        {Math.round(summary.avgIftCompletion)}%
+                      <span className={styles.progressLabel}>🔷 ИФТ (внутри)</span>
+                      <span className={`${styles.progressValue} ${styles[getPercentColorClass(summary.avgIftInsideCompletion)]}`}>
+                        {getPercentDisplay(summary.avgIftInsideCompletion)}
+                      </span>
+                    </div>
+                    
+                    <div className={styles.divider}></div>
+                    
+                    <div className={styles.progressItem}>
+                      <span className={styles.progressLabel}>🌐 ИФТ (внеш)</span>
+                      <span className={`${styles.progressValue} ${styles[getPercentColorClass(summary.avgIftOutsideCompletion)]}`}>
+                        {getPercentDisplay(summary.avgIftOutsideCompletion)}
                       </span>
                     </div>
                     
@@ -417,8 +448,8 @@ const Dashboard = () => {
                     
                     <div className={styles.progressItem}>
                       <span className={styles.progressLabel}>🟣 ПСИ</span>
-                      <span className={`${styles.progressValue} ${styles[psiColor]}`}>
-                        {Math.round(summary.avgPsiCompletion)}%
+                      <span className={`${styles.progressValue} ${styles[getPercentColorClass(summary.avgPsiCompletion)]}`}>
+                        {getPercentDisplay(summary.avgPsiCompletion)}
                       </span>
                     </div>
                   </div>

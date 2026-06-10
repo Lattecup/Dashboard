@@ -1,15 +1,15 @@
 // Этап ИФТ
 export interface IFTStage {
   id: string;
-  name: string;              // ИФТ1, ИФТ2...
-  description: string;       // Что делается
-  status: string;            // Статус (в работе, завершен и т.д.)
-  startDate: string;         // Старт
-  endDate: string;           // Финиш
-  totalSteps: number;        // Сколько шагов ИФТ
-  completedSteps: number;    // Сколько прошли успешно шагов
-  percentage: number;        // % прохождения
-  integrationType?: string;  // Интеграция с внешниками
+  name: string;
+  description: string;
+  status: string;
+  startDate: string;
+  endDate: string;
+  totalSteps: number;
+  completedSteps: number;
+  percentage: number;
+  integrationType?: string;
 }
 
 // Проблема
@@ -22,7 +22,7 @@ export interface Problem {
   chainName: string;
 }
 
-// Гигиена (пропуски отчетов) - оставляем для совместимости с парсером
+// Гигиена
 export interface Hygiene {
   id: string;
   processName: string;
@@ -86,6 +86,7 @@ export interface ChainSummary {
   totalProcesses: number;
   totalProblems: number;
   overdueStages: number;
-  avgIftCompletion: number;
+  avgIftInsideCompletion: number;   // -1 означает NA
+  avgIftOutsideCompletion: number;  // -1 означает NA
   avgPsiCompletion: number;
 }
