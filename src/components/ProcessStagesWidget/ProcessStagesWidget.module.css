@@ -345,3 +345,12 @@
   margin-bottom: 4px;
 }
 
+/* Маленькая иконка внутри полоски справа */
+.integrationIconInline {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-left: 6px;
+  flex-shrink: 0;
+}

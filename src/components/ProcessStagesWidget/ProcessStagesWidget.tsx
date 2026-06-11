@@ -2,9 +2,6 @@ import { useRef, useEffect, useState } from 'react';
 import styles from './ProcessStagesWidget.module.css';
 import type { Process } from '../../types/chain.types';
 import { parseDate } from '../utils/excelParser';
-import img1 from '../../../public/images/img1.png';
-import img2 from '../../../public/images/img2.png';
-import img3 from '../../../public/images/img3.png';
 
 interface GanttChartProps {
   processes: Process[];
@@ -56,9 +53,9 @@ const getStepColor = (stage: any): string => {
 // Получить картинку для интеграции
 const getIntegrationIcon = (integrationType?: string): string | null => {
   if (!integrationType) return null;
-  if (integrationType.includes('Внутри ERP')) return img1;
-  if (integrationType.includes('С внешниками')) return img2;
-  if (integrationType.includes('В СП внешники не требуются')) return img3;
+  if (integrationType.includes('Внутри ERP')) return '/images/img1.png';
+  if (integrationType.includes('С внешниками')) return '/images/img2.png';
+  if (integrationType.includes('В СП внешники не требуются')) return '/images/img3.png';
   return null;
 };
 
@@ -327,7 +324,7 @@ const ProcessStagesWidget = ({ processes, selectedProcess = 'all' }: GanttChartP
                       
                       let finalMarginBottom = marginBottom;
                       if (hasIntegrationIcon) {
-                        finalMarginBottom = Math.max(finalMarginBottom, 70);
+                        finalMarginBottom = Math.max(finalMarginBottom, 60);
                       }
                       if (isPsiWithoutDesc && !hasIntegrationIcon) {
                         finalMarginBottom = Math.max(finalMarginBottom, 24);
@@ -369,6 +366,13 @@ const ProcessStagesWidget = ({ processes, selectedProcess = 'all' }: GanttChartP
                               <span className={styles.stepsLabel} style={{ color: stepColor }}>
                                 {stage.completedSteps}/{displayTotal}
                               </span>
+                              {iconSrc && (
+                                <img 
+                                  src={iconSrc} 
+                                  className={styles.integrationIconInline}
+                                  alt="integration"
+                                />
+                              )}
                             </div>
                           </div>
                           
@@ -379,25 +383,10 @@ const ProcessStagesWidget = ({ processes, selectedProcess = 'all' }: GanttChartP
                               top: isPsiWithoutDesc ? '56px' : '28px'
                             }}
                           >
-                            {iconSrc ? (
-                              <>
-                                <img 
-                                  src={iconSrc} 
-                                  className={styles.integrationIcon}
-                                  alt="integration"
-                                />
-                                <div className={styles.endDateDotLabel}>
-                                  {stage.endDate ? formatDateShort(stage.endDate) : 'TBD'}
-                                </div>
-                              </>
-                            ) : (
-                              <>
-                                <div className={styles.endDateDotPoint} />
-                                <div className={styles.endDateDotLabel}>
-                                  {stage.endDate ? formatDateShort(stage.endDate) : 'TBD'}
-                                </div>
-                              </>
-                            )}
+                            <div className={styles.endDateDotPoint} />
+                            <div className={styles.endDateDotLabel}>
+                              {stage.endDate ? formatDateShort(stage.endDate) : 'TBD'}
+                            </div>
                           </div>
                         </div>
                       );
