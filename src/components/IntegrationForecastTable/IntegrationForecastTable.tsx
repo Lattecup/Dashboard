@@ -2,7 +2,6 @@ import { useState, useMemo } from 'react';
 import styles from './IntegrationForecastTable.module.css';
 import type { Chain } from '../../types/chain.types';
 import { parseDate } from '../utils/excelParser';
-import * as XLSX from 'xlsx';
 
 interface IntegrationForecastTableProps {
   chains: Chain[];
@@ -43,10 +42,9 @@ const getStatusColorClass = (percent: number): string => {
   if (percent >= 50) return 'blue';
   if (percent >= 25) return 'yellow';
   if (percent > 0 && percent < 25) return 'red';
-  return ''; // 0% — без цвета (серый по умолчанию)
+  return '';
 };
 
-// Проверка, нужно ли красить в красный (0% и дата уже прошла)
 const shouldShowRed = (forecastDate: string, status: number): boolean => {
   if (status !== 0) return false;
   if (!forecastDate || forecastDate === 'TBD' || forecastDate === 'Нет' || forecastDate === '') {
@@ -180,7 +178,10 @@ const IntegrationForecastTable = ({ chains }: IntegrationForecastTableProps) => 
     return Array.from(chainsSet).sort();
   }, [allTableData]);
 
-  const exportToExcel = () => {
+  // 🆕 Динамический импорт xlsx — библиотека загружается только при клике
+  const exportToExcel = async () => {
+    const XLSX = await import('xlsx');
+    
     const excelData = filteredData.map(row => ({
       'Цепочка': row.chainName,
       'Процесс': row.processShortName,
@@ -236,7 +237,7 @@ const IntegrationForecastTable = ({ chains }: IntegrationForecastTableProps) => 
               else if (numValue >= 50) color = '3B82F6';
               else if (numValue >= 25) color = 'F59E0B';
               else if (numValue > 0 && numValue < 25) color = 'EF4444';
-              else color = '6B7280'; // 0% — серый
+              else color = '6B7280';
             }
             cell.s = {
               font: {
