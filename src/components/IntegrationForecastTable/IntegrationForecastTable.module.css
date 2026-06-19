@@ -66,27 +66,6 @@
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
 }
 
-/* 🆕 Кнопка экспорта */
-.exportButton {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 16px;
-  background: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.2s;
-  white-space: nowrap;
-}
-
-.exportButton:hover {
-  background: #2563eb;
-}
-
 .tableWrapper {
   overflow-x: auto;
 }
@@ -94,26 +73,29 @@
 .table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: 15px; /* увеличен с 13px */
 }
 
 .table th {
   text-align: left;
-  padding: 12px 12px;
+  padding: 12px 16px; /* увеличен отступ */
   background: #f9fafb;
   font-weight: 600;
+  font-size: 15px; /* увеличен с 13px */
   color: #374151;
   border-bottom: 2px solid #e5e7eb;
 }
 
 .table td {
-  padding: 12px 12px;
+  padding: 12px 16px; /* увеличен отступ */
   border-bottom: 1px solid #f3f4f6;
   vertical-align: middle;
+  font-size: 15px; /* увеличен с 13px */
 }
 
 .chainCell {
   font-weight: 600;
+  font-size: 15px;
   color: #1f2937;
   background: #fafafa;
   vertical-align: top;
@@ -121,15 +103,15 @@
 
 .processCell {
   color: #4b5563;
+  font-size: 15px;
 }
 
 .dateCell {
   color: #6b7280;
   font-family: monospace;
-  font-size: 12px;
+  font-size: 14px; /* увеличен с 12px */
 }
 
-/* Стили для Прогноз */
 .forecastNa {
   color: #9ca3af;
   font-style: italic;
@@ -142,7 +124,7 @@
 
 .statusCell {
   font-weight: 600;
-  font-size: 14px;
+  font-size: 16px; /* увеличен с 14px */
 }
 
 .statusCell.green {
@@ -165,18 +147,14 @@
   color: #9ca3af;
   font-style: italic;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 16px; /* увеличен с 14px */
 }
 
 .empty {
   text-align: center;
   padding: 40px;
   color: #9ca3af;
-  font-size: 14px;
-}
-
-.statusCell.red {
-  color: #ef4444;
+  font-size: 15px; /* увеличен с 14px */
 }
 
 /* Адаптивность */
@@ -206,20 +184,28 @@
   .filterSelect {
     flex: 1;
     min-width: 120px;
+    font-size: 14px;
   }
   
-  .exportButton {
-    width: 100%;
-    justify-content: center;
+  .table {
+    font-size: 14px;
   }
   
   .table th,
   .table td {
-    padding: 8px 8px;
+    padding: 10px 12px;
+    font-size: 14px;
   }
   
   .statusCell {
-    font-size: 12px;
+    font-size: 15px;
+  }
+  
+  .statusNa {
+    font-size: 15px;
+  }
+  
+  .dateCell {
+    font-size: 13px;
   }
 }
-

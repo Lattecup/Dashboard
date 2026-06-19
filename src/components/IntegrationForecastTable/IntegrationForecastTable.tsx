@@ -178,91 +178,6 @@ const IntegrationForecastTable = ({ chains }: IntegrationForecastTableProps) => 
     return Array.from(chainsSet).sort();
   }, [allTableData]);
 
-  // 🆕 Динамический импорт xlsx — библиотека загружается только при клике
-  const exportToExcel = async () => {
-    const XLSX = await import('xlsx');
-    
-    const excelData = filteredData.map(row => ({
-      'Цепочка': row.chainName,
-      'Процесс': row.processShortName,
-      'Прогноз ВНУТРИ': row.insideForecast,
-      'Статус ВНУТРИ': row.insideStatus === 'NA' ? 'NA' : `${row.insideStatus}%`,
-      'Прогноз ВНЕШ': row.outsideForecast,
-      'Статус ВНЕШ': row.outsideStatus === 'NA' ? 'NA' : `${row.outsideStatus}%`,
-    }));
-
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(excelData);
-
-    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
-    
-    for (let col = range.s.c; col <= range.e.c; col++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: range.s.r, c: col });
-      if (ws[cellAddress]) {
-        ws[cellAddress].s = {
-          font: {
-            bold: true,
-            color: { rgb: '1F2937' }
-          }
-        };
-      }
-    }
-
-    for (let row = range.s.r + 1; row <= range.e.r; row++) {
-      for (let col = range.s.c; col <= range.e.c; col++) {
-        const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
-        const cell = ws[cellAddress];
-        if (cell) {
-          const value = String(cell.v || '');
-          
-          if (value === 'NA') {
-            cell.s = {
-              font: {
-                color: { rgb: '9CA3AF' },
-                italic: true
-              }
-            };
-          } else if (value === 'TBD') {
-            cell.s = {
-              font: {
-                color: { rgb: 'F59E0B' },
-                bold: true
-              }
-            };
-          } else if (value.includes('%')) {
-            const numValue = parseInt(value);
-            let color = '1F2937';
-            if (!isNaN(numValue)) {
-              if (numValue >= 80) color = '10B981';
-              else if (numValue >= 50) color = '3B82F6';
-              else if (numValue >= 25) color = 'F59E0B';
-              else if (numValue > 0 && numValue < 25) color = 'EF4444';
-              else color = '6B7280';
-            }
-            cell.s = {
-              font: {
-                color: { rgb: color },
-                bold: true
-              }
-            };
-          }
-        }
-      }
-    }
-
-    ws['!cols'] = [
-      { wch: 25 },
-      { wch: 20 },
-      { wch: 18 },
-      { wch: 14 },
-      { wch: 18 },
-      { wch: 14 },
-    ];
-
-    XLSX.utils.book_append_sheet(wb, ws, 'Прогнозы');
-    XLSX.writeFile(wb, `Прогноз_по_интеграциям_${new Date().toISOString().slice(0,10)}.xlsx`);
-  };
-
   if (allTableData.length === 0) {
     return null;
   }
@@ -293,10 +208,6 @@ const IntegrationForecastTable = ({ chains }: IntegrationForecastTableProps) => 
               ))}
             </select>
           </div>
-          
-          <button className={styles.exportButton} onClick={exportToExcel}>
-            📥 Выгрузить
-          </button>
         </div>
       </div>
       
