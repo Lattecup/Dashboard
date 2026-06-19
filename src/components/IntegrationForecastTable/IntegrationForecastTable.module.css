@@ -17,6 +17,13 @@
   border-bottom: 2px solid #f3f4f6;
 }
 
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
 .title {
   font-size: 18px;
   font-weight: 600;
@@ -57,6 +64,27 @@
   outline: none;
   border-color: #3b82f6;
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+/* 🆕 Кнопка экспорта */
+.exportButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.exportButton:hover {
+  background: #2563eb;
 }
 
 .tableWrapper {
@@ -101,9 +129,10 @@
   font-size: 12px;
 }
 
-/* Стили для Прогноз ВНЕШ */
+/* Стили для Прогноз */
 .forecastNa {
   color: #9ca3af;
+  font-style: italic;
 }
 
 .forecastTbd {
@@ -132,11 +161,11 @@
   color: #ef4444;
 }
 
-/* NA в статусе — такой же стиль, как в прогнозе, но с сохранением размера шрифта */
-.statusCell.statusNa {
+.statusNa {
   color: #9ca3af;
-  font-weight: 500;
-  font-size: 12px;
+  font-style: italic;
+  font-weight: 600;
+  font-size: 14px;
 }
 
 .empty {
@@ -144,6 +173,10 @@
   padding: 40px;
   color: #9ca3af;
   font-size: 14px;
+}
+
+.statusCell.red {
+  color: #ef4444;
 }
 
 /* Адаптивность */
@@ -157,6 +190,11 @@
     align-items: flex-start;
   }
   
+  .headerRight {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  
   .title {
     font-size: 16px;
   }
@@ -167,6 +205,12 @@
   
   .filterSelect {
     flex: 1;
+    min-width: 120px;
+  }
+  
+  .exportButton {
+    width: 100%;
+    justify-content: center;
   }
   
   .table th,
@@ -177,8 +221,5 @@
   .statusCell {
     font-size: 12px;
   }
-  
-  .statusCell.statusNa {
-    font-size: 12px;
-  }
 }
+

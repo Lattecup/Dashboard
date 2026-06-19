@@ -249,17 +249,17 @@
   margin-top: 8px;
 }
 
-/* Список цепочек (карточки) */
+/* Список цепочек (карточки) - 4 колонки */
 .chainsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
 }
 
 .chainCard {
   background: white;
   border-radius: 16px;
-  padding: 20px;
+  padding: 16px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
@@ -271,11 +271,11 @@
 }
 
 .chainName {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   color: #1f2937;
-  margin-bottom: 14px;
-  padding-bottom: 10px;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
   border-bottom: 2px solid #e5e7eb;
 }
 
@@ -284,26 +284,26 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
 .statItem {
   display: flex;
   align-items: baseline;
-  gap: 4px;
+  gap: 3px;
   flex: 1;
   justify-content: center;
 }
 
 .statValue {
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 700;
   color: #1f2937;
 }
 
 .statLabel {
-  font-size: 11px;
+  font-size: 10px;
   color: #6b7280;
 }
 
@@ -315,35 +315,34 @@
   color: #f59e0b;
 }
 
-/* Строка 2: ИФТ (внутри) | ИФТ (внеш) | ПСИ */
+/* Строка 2: ИФТ (внутри) | ИФТ (внеш) | ПСИ — всё на одной строке */
 .chainProgressRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 14px;
-  padding: 8px 0;
-  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 10px;
+  padding: 4px 0;
 }
 
 .progressItem {
   display: flex;
   align-items: baseline;
-  gap: 6px;
+  gap: 4px;
   flex: 1;
   justify-content: center;
 }
 
 .progressLabel {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 500;
   color: #4b5563;
   white-space: nowrap;
 }
 
 .progressValue {
-  font-size: 16px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 700;
   white-space: nowrap;
 }
 
@@ -365,25 +364,26 @@
 
 .progressValue.na {
   color: #9ca3af;
+  font-style: italic;
 }
 
 .divider {
   width: 1px;
-  height: 20px;
+  height: 16px;
   background: #e5e7eb;
 }
 
 .chainFooter {
   display: flex;
   justify-content: flex-end;
-  padding-top: 8px;
+  padding-top: 6px;
   border-top: 1px solid #e5e7eb;
 }
 
 .detailLink {
   color: #3b82f6;
   font-weight: 500;
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .showMoreButton {
@@ -408,13 +408,21 @@
 }
 
 /* Адаптивность */
+@media (max-width: 1400px) {
+  .chainsGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
 @media (max-width: 1200px) {
   .overallGrid {
     grid-template-columns: repeat(3, 1fr);
   }
-  
+}
+
+@media (max-width: 1024px) {
   .chainsGrid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
@@ -440,6 +448,10 @@
     font-size: 24px;
   }
   
+  .chainsGrid {
+    grid-template-columns: 1fr;
+  }
+  
   .chainStatsRow {
     flex-wrap: wrap;
     gap: 8px;
@@ -447,7 +459,7 @@
   
   .chainProgressRow {
     flex-wrap: wrap;
-    gap: 8px;
+    justify-content: center;
   }
   
   .progressLabel {
