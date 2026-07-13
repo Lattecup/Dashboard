@@ -21,6 +21,7 @@ const Dashboard = () => {
     
     try {
       const parsedChains = await parseExcelFile(file);
+      console.log('📊 Загруженные цепочки:', parsedChains);
       setChains(parsedChains);
     } catch (error) {
       console.error('Ошибка при парсинге:', error);
@@ -74,7 +75,7 @@ const Dashboard = () => {
             let percentage = stage.percentage;
             if (percentage <= 1 && percentage > 0) percentage = percentage * 100;
             
-            if (stage.name === 'ПСИ') {
+            if (stage.name.includes('ПСИ')) {
               totalPsiCompletion += percentage;
               totalPsiStages++;
             } else {
@@ -144,7 +145,7 @@ const Dashboard = () => {
         const avgCompletion = totalStages > 0 ? (totalCompletion / totalStages) : 0;
         
         allProcesses.push({
-          name: process.name,
+          name: process.shortName || process.name,
           chainName: chain.name,
           percentage: avgCompletion,
           problems: process.problems.length,
@@ -187,7 +188,7 @@ const Dashboard = () => {
             let percentage = stage.percentage;
             if (percentage <= 1 && percentage > 0) percentage = percentage * 100;
             
-            if (stage.name === 'ПСИ') {
+            if (stage.name.includes('ПСИ')) {
               totalPsiCompletion += percentage;
               totalPsiStages++;
             } else {
@@ -305,8 +306,8 @@ const Dashboard = () => {
                 <div className={styles.processesProgressList}>
                   {displayedProcesses.map((process, idx) => {
                     const processData = chains.find(chain => 
-                      chain.processes.some(p => p.name === process.name)
-                    )?.processes.find(p => p.name === process.name);
+                      chain.processes.some(p => (p.shortName || p.name) === process.name)
+                    )?.processes.find(p => (p.shortName || p.name) === process.name);
                     
                     let iftProgress = 0;
                     let psiProgress = 0;
@@ -318,7 +319,7 @@ const Dashboard = () => {
                       let completedPsiSteps = 0;
                       
                       processData.iftStages.forEach(stage => {
-                        if (stage.name === 'ПСИ') {
+                        if (stage.name.includes('ПСИ')) {
                           totalPsiSteps += stage.totalSteps;
                           completedPsiSteps += stage.completedSteps;
                         } else {
@@ -398,6 +399,9 @@ const Dashboard = () => {
           <h2 className={styles.sectionTitle}>📋 Список цепочек</h2>
           <div className={styles.chainsGrid}>
             {summaries.map(summary => {
+              const insideColor = getPercentColor(summary.avgIftInsideCompletion);
+              const outsideColor = getPercentColor(summary.avgIftOutsideCompletion);
+              const psiColor = getPercentColor(summary.avgPsiCompletion);
               return (
                 <div 
                   key={summary.id} 

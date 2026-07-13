@@ -1,18 +1,18 @@
-// Этап ИФТ
+// Этап ИФТ/ПСИ
 export interface IFTStage {
   id: string;
-  name: string;
-  description: string;
+  name: string;              // ИФТ1, ПСИ1, ИФТ2, ПСИ2...
+  description: string;       // Что делается
   status: string;
   startDate: string;
   endDate: string;
   totalSteps: number;
   completedSteps: number;
   percentage: number;
-  integrationType?: string;
+  integrationType?: string;  // только для ИФТ
+  stageNumber?: number;      // для сортировки (1, 2, 3...)
 }
 
-// Проблема
 export interface Problem {
   id: string;
   description: string;
@@ -22,7 +22,6 @@ export interface Problem {
   chainName: string;
 }
 
-// Гигиена
 export interface Hygiene {
   id: string;
   processName: string;
@@ -30,29 +29,28 @@ export interface Hygiene {
   missedDates: string[];
 }
 
-// Сквозная цепочка
 export interface Chain {
   id: string;
   name: string;
   processes: Process[];
 }
 
-// Сквозной процесс
 export interface Process {
   id: string;
   name: string;
   shortName: string;
+  sp: string;
   iftStages: IFTStage[];
   problems: Problem[];
   hygiene: Hygiene[];
   links: {
     confluence?: string;
     story?: string;
-    sberChat?: string;
   };
+  datePromInside?: Date | null;
+  datePromOutside?: Date | null;
 }
 
-// Данные для Ганта
 export interface GanttItem {
   id: string;
   name: string;
@@ -67,7 +65,6 @@ export interface GanttItem {
   description?: string;
 }
 
-// Статистика по цепочке
 export interface ChainStats {
   totalProcesses: number;
   totalProblems: number;
@@ -79,14 +76,13 @@ export interface ChainStats {
   psiDeadline?: string;
 }
 
-// Сводка по цепочке для главной страницы
 export interface ChainSummary {
   id: string;
   name: string;
   totalProcesses: number;
   totalProblems: number;
   overdueStages: number;
-  avgIftInsideCompletion: number;   // -1 означает NA
-  avgIftOutsideCompletion: number;  // -1 означает NA
+  avgIftInsideCompletion: number;
+  avgIftOutsideCompletion: number;
   avgPsiCompletion: number;
 }

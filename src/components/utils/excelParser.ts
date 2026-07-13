@@ -1,19 +1,16 @@
 import * as XLSX from 'xlsx';
-import type { Chain, IFTStage, Problem } from '../../types/chain.types';
+import type { Chain, IFTStage, Problem, Process } from '../../types/chain.types';
 
-// Преобразование Excel числа в Date
 export const excelNumberToDate = (num: number): Date => {
   return new Date((num - 25569) * 86400 * 1000);
 };
 
-// Парсинг даты
 export const parseDate = (value: string | number | null | undefined): Date | null => {
   if (!value || value === '') return null;
   if (typeof value === 'number') return excelNumberToDate(value);
   const str = String(value).trim();
   if (str.toLowerCase() === 'tbd') return null;
   
-  // Формат DD.MM.YYYY
   const matchDDMMYYYY = str.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
   if (matchDDMMYYYY) {
     const day = parseInt(matchDDMMYYYY[1], 10);
@@ -23,7 +20,6 @@ export const parseDate = (value: string | number | null | undefined): Date | nul
     if (!isNaN(date.getTime())) return date;
   }
   
-  // Формат YYYY-MM-DD
   const matchYYYYMMDD = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (matchYYYYMMDD) {
     const date = new Date(str);
@@ -33,7 +29,6 @@ export const parseDate = (value: string | number | null | undefined): Date | nul
   return null;
 };
 
-// Форматирование даты для отображения
 export const formatDate = (value: string | number | null | undefined): string => {
   if (!value || value === '') return '';
   const date = parseDate(value);
@@ -56,7 +51,6 @@ const getPercentage = (value: any): number => {
   return parseFloat(str) || 0;
 };
 
-// Парсинг проблем
 export const parseProblems = (problemsStr: string, processName: string, chainName: string): Problem[] => {
   if (!problemsStr || problemsStr === '' || problemsStr === '-') return [];
   
@@ -80,29 +74,18 @@ export const parseProblems = (problemsStr: string, processName: string, chainNam
   return problems;
 };
 
-// Парсинг гигиены
-export const parseHygiene = (hygieneStr: string): string[] => {
-  if (!hygieneStr || hygieneStr === '' || hygieneStr === '-') return [];
-  
-  const dates: string[] = [];
-  const parts = hygieneStr.split(/\r?\n|,/);
-  
-  parts.forEach(part => {
-    const dateStr = part.trim();
-    if (dateStr && dateStr.match(/^\d{2}\.\d{2}\.\d{4}$/)) {
-      dates.push(dateStr);
-    }
-  });
-  
-  return dates;
-};
-
-// Нормализация строки для сравнения
 const normalizeName = (name: string): string => {
   return name.toLowerCase().replace(/\s+/g, ' ').trim();
 };
 
-// Поиск колонок по всему листу
+const extractStageNumber = (cell: string, prefix: string): number => {
+  const normalized = normalizeName(cell);
+  const prefixNorm = normalizeName(prefix);
+  const afterPrefix = normalized.replace(prefixNorm, '').trim();
+  const num = parseInt(afterPrefix, 10);
+  return isNaN(num) ? 0 : num;
+};
+
 const findColumns = (rawData: any[][]) => {
   const columnMap: Map<string, { row: number; col: number }> = new Map();
   
@@ -118,197 +101,176 @@ const findColumns = (rawData: any[][]) => {
       
       const normalizedCell = normalizeName(cell);
       
-      // Основные колонки
-      if (normalizedCell === normalizeName('Сквозная цепочка') || 
-          normalizedCell === normalizeName('Сквозная цепочка (СЦ)') || 
-          normalizedCell === normalizeName('сц')) {
+      if (normalizedCell === normalizeName('Цепочка') || 
+          normalizedCell === normalizeName('Сквозная цепочка (СЦ)')) {
         if (!columnMap.has('chain')) columnMap.set('chain', { row: rowIdx, col: colIdx });
-        console.log(`✅ Найдена колонка "chain" в строке ${rowIdx}, колонка ${colIdx}: "${cell}"`);
+        console.log(`✅ Найдена колонка "chain": "${cell}"`);
+      }
+      else if (normalizedCell === normalizeName('Короткое название процесса для статуса')) {
+        if (!columnMap.has('shortName')) columnMap.set('shortName', { row: rowIdx, col: colIdx });
+        console.log(`✅ Найдена колонка "shortName": "${cell}"`);
       }
       else if (normalizedCell === normalizeName('Сквозной процесс') || 
                normalizedCell === normalizeName('Процесс')) {
         if (!columnMap.has('process')) columnMap.set('process', { row: rowIdx, col: colIdx });
-        console.log(`✅ Найдена колонка "process" в строке ${rowIdx}, колонка ${colIdx}: "${cell}"`);
+        console.log(`✅ Найдена колонка "process": "${cell}"`);
       }
-      else if (normalizedCell === normalizeName('Короткое название процесса для статуса')) {
-        if (!columnMap.has('shortName')) columnMap.set('shortName', { row: rowIdx, col: colIdx });
+      else if (normalizedCell === normalizeName('СП')) {
+        if (!columnMap.has('sp')) columnMap.set('sp', { row: rowIdx, col: colIdx });
+        console.log(`✅ Найдена колонка "sp": "${cell}"`);
       }
-      else if (normalizedCell === normalizeName('Проблемы') ||
-               normalizedCell === normalizeName('Список проблем') ||
-               normalizedCell === normalizeName('Список проблем с ответственными и сроками')) {
+      else if (normalizedCell === normalizeName('Проблемы разработки, ИФТ, ПСИ и др.') ||
+               normalizedCell === normalizeName('Проблемы')) {
         if (!columnMap.has('problems')) columnMap.set('problems', { row: rowIdx, col: colIdx });
-        console.log(`✅ Найдена колонка "problems" в строке ${rowIdx}, колонка ${colIdx}: "${cell}"`);
+        console.log(`✅ Найдена колонка "problems": "${cell}"`);
       }
-      else if (normalizedCell === normalizeName('Гигиена')) {
-        if (!columnMap.has('hygiene')) columnMap.set('hygiene', { row: rowIdx, col: colIdx });
+      else if (normalizedCell === normalizeName('Дата ПРОМ внутри DA')) {
+        if (!columnMap.has('datePromInside')) columnMap.set('datePromInside', { row: rowIdx, col: colIdx });
+        console.log(`✅ Найдена колонка "datePromInside": "${cell}"`);
       }
-      // ИФТ1
-      else if (normalizedCell.includes('что делается в ифт1')) {
-        if (!columnMap.has('ift1_desc')) columnMap.set('ift1_desc', { row: rowIdx, col: colIdx });
-        console.log(`✅ Найдена колонка "ift1_desc" в строке ${rowIdx}, колонка ${colIdx}: "${cell}"`);
+      else if (normalizedCell === normalizeName('Дата ПРОМ с внешниками')) {
+        if (!columnMap.has('datePromOutside')) columnMap.set('datePromOutside', { row: rowIdx, col: colIdx });
+        console.log(`✅ Найдена колонка "datePromOutside": "${cell}"`);
       }
-      else if (normalizedCell.includes('статус ифт1')) {
-        if (!columnMap.has('ift1_status')) columnMap.set('ift1_status', { row: rowIdx, col: colIdx });
-      }
-      else if (normalizedCell.includes('старт ифт1')) {
-        if (!columnMap.has('ift1_start')) columnMap.set('ift1_start', { row: rowIdx, col: colIdx });
-      }
-      else if (normalizedCell.includes('финиш ифт1')) {
-        if (!columnMap.has('ift1_end')) columnMap.set('ift1_end', { row: rowIdx, col: colIdx });
-      }
-      else if (normalizedCell.includes('пройдено шагов ифт 1')) {
-        if (!columnMap.has('ift1_completed')) columnMap.set('ift1_completed', { row: rowIdx, col: colIdx });
-        console.log(`✅ Найдена колонка "ift1_completed" в строке ${rowIdx}, колонка ${colIdx}: "${cell}"`);
-      }
-      else if (normalizedCell.includes('сколько шагов ифт1')) {
-        if (!columnMap.has('ift1_total')) columnMap.set('ift1_total', { row: rowIdx, col: colIdx });
-        console.log(`✅ Найдена колонка "ift1_total" в строке ${rowIdx}, колонка ${colIdx}: "${cell}"`);
-      }
-      else if (normalizedCell.includes('% прохождения ифт1')) {
-        if (!columnMap.has('ift1_percent')) columnMap.set('ift1_percent', { row: rowIdx, col: colIdx });
-      }
-      // ИФТ2
-      else if (normalizedCell.includes('что делается в ифт2')) {
-        if (!columnMap.has('ift2_desc')) columnMap.set('ift2_desc', { row: rowIdx, col: colIdx });
-      }
-      else if (normalizedCell.includes('статус ифт2')) {
-        if (!columnMap.has('ift2_status')) columnMap.set('ift2_status', { row: rowIdx, col: colIdx });
-      }
-      else if (normalizedCell.includes('старт ифт2')) {
-        if (!columnMap.has('ift2_start')) columnMap.set('ift2_start', { row: rowIdx, col: colIdx });
-      }
-      else if (normalizedCell.includes('финиш ифт2')) {
-        if (!columnMap.has('ift2_end')) columnMap.set('ift2_end', { row: rowIdx, col: colIdx });
-      }
-      else if (normalizedCell.includes('пройдено шагов ифт 2')) {
-        if (!columnMap.has('ift2_completed')) columnMap.set('ift2_completed', { row: rowIdx, col: colIdx });
-      }
-      else if (normalizedCell.includes('сколько шагов ифт2')) {
-        if (!columnMap.has('ift2_total')) columnMap.set('ift2_total', { row: rowIdx, col: colIdx });
-      }
-      else if (normalizedCell.includes('% прохождения ифт2')) {
-        if (!columnMap.has('ift2_percent')) columnMap.set('ift2_percent', { row: rowIdx, col: colIdx });
-      }
-      // ИФТ3
-      else if (normalizedCell.includes('что делается в ифт3')) {
-        if (!columnMap.has('ift3_desc')) columnMap.set('ift3_desc', { row: rowIdx, col: colIdx });
-      }
-      else if (normalizedCell.includes('статус ифт3')) {
-        if (!columnMap.has('ift3_status')) columnMap.set('ift3_status', { row: rowIdx, col: colIdx });
-      }
-      else if (normalizedCell.includes('старт ифт3')) {
-        if (!columnMap.has('ift3_start')) columnMap.set('ift3_start', { row: rowIdx, col: colIdx });
-      }
-      else if (normalizedCell.includes('финиш ифт3')) {
-        if (!columnMap.has('ift3_end')) columnMap.set('ift3_end', { row: rowIdx, col: colIdx });
-      }
-      else if (normalizedCell.includes('пройдено шагов ифт 3')) {
-        if (!columnMap.has('ift3_completed')) columnMap.set('ift3_completed', { row: rowIdx, col: colIdx });
-      }
-      else if (normalizedCell.includes('сколько шагов ифт3')) {
-        if (!columnMap.has('ift3_total')) columnMap.set('ift3_total', { row: rowIdx, col: colIdx });
-      }
-      else if (normalizedCell.includes('% прохождения ифт3')) {
-        if (!columnMap.has('ift3_percent')) columnMap.set('ift3_percent', { row: rowIdx, col: colIdx });
-      }
-      // ИФТ4
-      else if (normalizedCell.includes('что делается в ифт4')) {
-        if (!columnMap.has('ift4_desc')) columnMap.set('ift4_desc', { row: rowIdx, col: colIdx });
-      }
-      else if (normalizedCell.includes('статус ифт4')) {
-        if (!columnMap.has('ift4_status')) columnMap.set('ift4_status', { row: rowIdx, col: colIdx });
-      }
-      else if (normalizedCell.includes('старт ифт4')) {
-        if (!columnMap.has('ift4_start')) columnMap.set('ift4_start', { row: rowIdx, col: colIdx });
-      }
-      else if (normalizedCell.includes('финиш ифт4')) {
-        if (!columnMap.has('ift4_end')) columnMap.set('ift4_end', { row: rowIdx, col: colIdx });
-      }
-      else if (normalizedCell.includes('пройдено шагов ифт 4')) {
-        if (!columnMap.has('ift4_completed')) columnMap.set('ift4_completed', { row: rowIdx, col: colIdx });
-      }
-      else if (normalizedCell.includes('сколько шагов ифт4')) {
-        if (!columnMap.has('ift4_total')) columnMap.set('ift4_total', { row: rowIdx, col: colIdx });
-      }
-      else if (normalizedCell.includes('% прохождения ифт4')) {
-        if (!columnMap.has('ift4_percent')) columnMap.set('ift4_percent', { row: rowIdx, col: colIdx });
-      }
-      // ИФТ5
-      else if (normalizedCell.includes('что делается в ифт5')) {
-        if (!columnMap.has('ift5_desc')) columnMap.set('ift5_desc', { row: rowIdx, col: colIdx });
-      }
-      else if (normalizedCell.includes('статус ифт5')) {
-        if (!columnMap.has('ift5_status')) columnMap.set('ift5_status', { row: rowIdx, col: colIdx });
-      }
-      else if (normalizedCell.includes('старт ифт5')) {
-        if (!columnMap.has('ift5_start')) columnMap.set('ift5_start', { row: rowIdx, col: colIdx });
-      }
-      else if (normalizedCell.includes('финиш ифт5')) {
-        if (!columnMap.has('ift5_end')) columnMap.set('ift5_end', { row: rowIdx, col: colIdx });
-      }
-      else if (normalizedCell.includes('пройдено шагов ифт 5')) {
-        if (!columnMap.has('ift5_completed')) columnMap.set('ift5_completed', { row: rowIdx, col: colIdx });
-      }
-      else if (normalizedCell.includes('сколько шагов ифт5')) {
-        if (!columnMap.has('ift5_total')) columnMap.set('ift5_total', { row: rowIdx, col: colIdx });
-      }
-      else if (normalizedCell.includes('% прохождения ифт5')) {
-        if (!columnMap.has('ift5_percent')) columnMap.set('ift5_percent', { row: rowIdx, col: colIdx });
-      }
-      // Интеграции с внешниками ИФТ1-5
-      else if (normalizedCell === normalizeName('Интеграции с внешниками ИФТ1')) {
-        if (!columnMap.has('integration1')) columnMap.set('integration1', { row: rowIdx, col: colIdx });
-        console.log(`✅ Найдена колонка "integration1" в строке ${rowIdx}, колонка ${colIdx}: "${cell}"`);
-      }
-      else if (normalizedCell === normalizeName('Интеграции с внешниками ИФТ2')) {
-        if (!columnMap.has('integration2')) columnMap.set('integration2', { row: rowIdx, col: colIdx });
-      }
-      else if (normalizedCell === normalizeName('Интеграции с внешниками ИФТ3')) {
-        if (!columnMap.has('integration3')) columnMap.set('integration3', { row: rowIdx, col: colIdx });
-      }
-      else if (normalizedCell === normalizeName('Интеграции с внешниками ИФТ4')) {
-        if (!columnMap.has('integration4')) columnMap.set('integration4', { row: rowIdx, col: colIdx });
-      }
-      else if (normalizedCell === normalizeName('Интеграции с внешниками ИФТ5')) {
-        if (!columnMap.has('integration5')) columnMap.set('integration5', { row: rowIdx, col: colIdx });
-      }
-      // ПСИ (новые колонки)
-      else if (normalizedCell.includes('что делается в пси') || normalizedCell.includes('пси описание')) {
-        if (!columnMap.has('psi_desc')) columnMap.set('psi_desc', { row: rowIdx, col: colIdx });
-        console.log(`✅ Найдена колонка "psi_desc" в строке ${rowIdx}, колонка ${colIdx}: "${cell}"`);
-      }
-      else if (normalizedCell.includes('статус пси')) {
-        if (!columnMap.has('psi_status')) columnMap.set('psi_status', { row: rowIdx, col: colIdx });
-      }
-      else if (normalizedCell.includes('старт пси')) {
-        if (!columnMap.has('psi_start')) columnMap.set('psi_start', { row: rowIdx, col: colIdx });
-      }
-      else if (normalizedCell.includes('финиш пси')) {
-        if (!columnMap.has('psi_end')) columnMap.set('psi_end', { row: rowIdx, col: colIdx });
-      }
-      else if (normalizedCell.includes('пройдено шагов пси') || normalizedCell.includes('пройден шогов п')) {
-        if (!columnMap.has('psi_completed')) columnMap.set('psi_completed', { row: rowIdx, col: colIdx });
-        console.log(`✅ Найдена колонка "psi_completed" в строке ${rowIdx}, колонка ${colIdx}: "${cell}"`);
-      }
-      else if (normalizedCell.includes('сколько шагов пси') || normalizedCell.includes('сколько шогов п')) {
-        if (!columnMap.has('psi_total')) columnMap.set('psi_total', { row: rowIdx, col: colIdx });
-        console.log(`✅ Найдена колонка "psi_total" в строке ${rowIdx}, колонка ${colIdx}: "${cell}"`);
-      }
-      else if (normalizedCell.includes('% прохождения пси')) {
-        if (!columnMap.has('psi_percent')) columnMap.set('psi_percent', { row: rowIdx, col: colIdx });
-      }
-      // Ссылки
-      else if (normalizedCell === normalizeName('Результаты (Confl)') || 
-               normalizedCell === normalizeName('Confluence')) {
-        if (!columnMap.has('confluence')) columnMap.set('confluence', { row: rowIdx, col: colIdx });
-      }
-      else if (normalizedCell === normalizeName('ДЭШ со сторями') || 
-               normalizedCell === normalizeName('Story')) {
-        if (!columnMap.has('story')) columnMap.set('story', { row: rowIdx, col: colIdx });
-      }
-      else if (normalizedCell === normalizeName('СберЧат') || 
-               normalizedCell === normalizeName('Сберчат')) {
-        if (!columnMap.has('sberChat')) columnMap.set('sberChat', { row: rowIdx, col: colIdx });
+      else {
+        // Этап N: обьем / объем
+        const stageDescMatch = normalizedCell.match(/^этап\s*(\d+):\s*об[ьъ]ем$/);
+        if (stageDescMatch) {
+          const num = parseInt(stageDescMatch[1], 10);
+          const key = `stage${num}_desc`;
+          if (!columnMap.has(key)) {
+            columnMap.set(key, { row: rowIdx, col: colIdx });
+            console.log(`✅ Найдена колонка "${key}": "${cell}"`);
+          }
+        }
+        // Статус ИФТN
+        else if (normalizedCell.includes('статус ифт')) {
+          const num = extractStageNumber(normalizedCell, 'статус ифт');
+          if (num > 0) {
+            const key = `stage${num}_status`;
+            if (!columnMap.has(key)) columnMap.set(key, { row: rowIdx, col: colIdx });
+          }
+        }
+        // Старт ИФТN
+        else if (normalizedCell.includes('старт ифт')) {
+          const num = extractStageNumber(normalizedCell, 'старт ифт');
+          if (num > 0) {
+            const key = `stage${num}_start`;
+            if (!columnMap.has(key)) columnMap.set(key, { row: rowIdx, col: colIdx });
+          }
+        }
+        // Финиш ИФТN
+        else if (normalizedCell.includes('финиш ифт')) {
+          const num = extractStageNumber(normalizedCell, 'финиш ифт');
+          if (num > 0) {
+            const key = `stage${num}_end`;
+            if (!columnMap.has(key)) columnMap.set(key, { row: rowIdx, col: colIdx });
+          }
+        }
+        // Пройдено шагов ИФТN
+        else if (normalizedCell.includes('пройдено шагов ифт')) {
+          const num = extractStageNumber(normalizedCell, 'пройдено шагов ифт');
+          if (num > 0) {
+            const key = `stage${num}_completed`;
+            if (!columnMap.has(key)) columnMap.set(key, { row: rowIdx, col: colIdx });
+          }
+        }
+        // Сколько шагов ИФТN
+        else if (normalizedCell.includes('сколько шагов ифт')) {
+          const num = extractStageNumber(normalizedCell, 'сколько шагов ифт');
+          if (num > 0) {
+            const key = `stage${num}_total`;
+            if (!columnMap.has(key)) columnMap.set(key, { row: rowIdx, col: colIdx });
+          }
+        }
+        // % прохождения ИФТN
+        else if (normalizedCell.includes('% прохождения ифт')) {
+          const num = extractStageNumber(normalizedCell, '% прохождения ифт');
+          if (num > 0) {
+            const key = `stage${num}_percent`;
+            if (!columnMap.has(key)) columnMap.set(key, { row: rowIdx, col: colIdx });
+          }
+        }
+        // ⭐⭐⭐ Этап N: Интеграции с внешниками (НОВОЕ НАЗВАНИЕ - множественное число)
+        else if (normalizedCell.includes('этап') && normalizedCell.includes('интеграции с внешниками')) {
+          const match = normalizedCell.match(/^этап\s*(\d+):\s*интеграции с внешниками$/);
+          if (match) {
+            const num = parseInt(match[1], 10);
+            const key = `stage${num}_integration`;
+            if (!columnMap.has(key)) {
+              columnMap.set(key, { row: rowIdx, col: colIdx });
+              console.log(`✅ Найдена колонка "${key}": "${cell}"`);
+            }
+          }
+        }
+        // Запасной вариант: старая колонка "Этап N: Интеграция с внешниками"
+        else if (normalizedCell.includes('этап') && normalizedCell.includes('интеграция с внешниками')) {
+          const match = normalizedCell.match(/^этап\s*(\d+):\s*интеграция с внешниками$/);
+          if (match) {
+            const num = parseInt(match[1], 10);
+            const key = `stage${num}_integration`;
+            if (!columnMap.has(key)) {
+              columnMap.set(key, { row: rowIdx, col: colIdx });
+              console.log(`✅ Найдена колонка "${key}": "${cell}"`);
+            }
+          }
+        }
+        // Статус ПСИN
+        else if (normalizedCell.includes('статус пси')) {
+          const num = extractStageNumber(normalizedCell, 'статус пси');
+          if (num > 0) {
+            const key = `psi${num}_status`;
+            if (!columnMap.has(key)) columnMap.set(key, { row: rowIdx, col: colIdx });
+          }
+        }
+        // Старт ПСИN
+        else if (normalizedCell.includes('старт пси')) {
+          const num = extractStageNumber(normalizedCell, 'старт пси');
+          if (num > 0) {
+            const key = `psi${num}_start`;
+            if (!columnMap.has(key)) columnMap.set(key, { row: rowIdx, col: colIdx });
+          }
+        }
+        // Финиш ПСИN
+        else if (normalizedCell.includes('финиш пси')) {
+          const num = extractStageNumber(normalizedCell, 'финиш пси');
+          if (num > 0) {
+            const key = `psi${num}_end`;
+            if (!columnMap.has(key)) columnMap.set(key, { row: rowIdx, col: colIdx });
+          }
+        }
+        // Пройдено шагов ПСИN
+        else if (normalizedCell.includes('пройдено шагов пси')) {
+          const num = extractStageNumber(normalizedCell, 'пройдено шагов пси');
+          if (num > 0) {
+            const key = `psi${num}_completed`;
+            if (!columnMap.has(key)) columnMap.set(key, { row: rowIdx, col: colIdx });
+          }
+        }
+        // Сколько шагов ПСИN
+        else if (normalizedCell.includes('сколько шагов пси')) {
+          const num = extractStageNumber(normalizedCell, 'сколько шагов пси');
+          if (num > 0) {
+            const key = `psi${num}_total`;
+            if (!columnMap.has(key)) columnMap.set(key, { row: rowIdx, col: colIdx });
+          }
+        }
+        // % прохождения ПСИN
+        else if (normalizedCell.includes('% прохождения пси')) {
+          const num = extractStageNumber(normalizedCell, '% прохождения пси');
+          if (num > 0) {
+            const key = `psi${num}_percent`;
+            if (!columnMap.has(key)) columnMap.set(key, { row: rowIdx, col: colIdx });
+          }
+        }
+        else if (normalizedCell === normalizeName('Результаты (Confl)') || 
+                 normalizedCell === normalizeName('Confluence')) {
+          if (!columnMap.has('confluence')) columnMap.set('confluence', { row: rowIdx, col: colIdx });
+        }
+        else if (normalizedCell === normalizeName('ДЭШ со сторями') || 
+                 normalizedCell === normalizeName('Story')) {
+          if (!columnMap.has('story')) columnMap.set('story', { row: rowIdx, col: colIdx });
+        }
       }
     }
   }
@@ -318,7 +280,6 @@ const findColumns = (rawData: any[][]) => {
   return columnMap;
 };
 
-// Основная функция парсинга Excel
 export const parseExcelFile = (file: File): Promise<Chain[]> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -330,7 +291,6 @@ export const parseExcelFile = (file: File): Promise<Chain[]> => {
       const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
       
       console.log('📄 Всего строк в файле:', rawData.length);
-      console.log('📄 Первые 5 строк:', rawData.slice(0, 5));
       
       if (rawData.length === 0) {
         reject(new Error('Файл пуст'));
@@ -340,11 +300,7 @@ export const parseExcelFile = (file: File): Promise<Chain[]> => {
       const columnMap = findColumns(rawData);
       
       if (!columnMap.has('chain')) {
-        reject(new Error('Не найдена колонка "Сквозная цепочка"'));
-        return;
-      }
-      if (!columnMap.has('process')) {
-        reject(new Error('Не найдена колонка "Сквозной процесс"'));
+        reject(new Error('Не найдена колонка "Цепочка"'));
         return;
       }
       
@@ -367,113 +323,91 @@ export const parseExcelFile = (file: File): Promise<Chain[]> => {
         const chainName = String(getValue(row, columnMap.get('chain')) || '').trim();
         if (!chainName || chainName === '') continue;
         
-        const processName = String(getValue(row, columnMap.get('process')) || '').trim();
+        const shortName = String(getValue(row, columnMap.get('shortName')) || '').trim();
+        const processName = String(getValue(row, columnMap.get('process')) || '').trim() || shortName;
         if (!processName || processName === '') continue;
         
-        const shortName = String(getValue(row, columnMap.get('shortName')) || '').trim() || processName;
+        const sp = String(getValue(row, columnMap.get('sp')) || '').trim();
         const problemsStr = String(getValue(row, columnMap.get('problems')) || '');
-        const hygieneStr = String(getValue(row, columnMap.get('hygiene')) || '');
+        const datePromInside = parseDate(getValue(row, columnMap.get('datePromInside')));
+        const datePromOutside = parseDate(getValue(row, columnMap.get('datePromOutside')));
         
-        console.log(`\n📌 Строка ${i}:`, { chainName, processName, shortName });
+        console.log(`\n📌 Строка ${i}:`, { chainName, processName, shortName, sp });
         
         const iftStages: IFTStage[] = [];
+        const maxStages = 10;
         
-        const iftData = [
-          { num: 1, desc: columnMap.get('ift1_desc'), status: columnMap.get('ift1_status'), start: columnMap.get('ift1_start'), end: columnMap.get('ift1_end'), completed: columnMap.get('ift1_completed'), total: columnMap.get('ift1_total'), percent: columnMap.get('ift1_percent'), integration: columnMap.get('integration1') },
-          { num: 2, desc: columnMap.get('ift2_desc'), status: columnMap.get('ift2_status'), start: columnMap.get('ift2_start'), end: columnMap.get('ift2_end'), completed: columnMap.get('ift2_completed'), total: columnMap.get('ift2_total'), percent: columnMap.get('ift2_percent'), integration: columnMap.get('integration2') },
-          { num: 3, desc: columnMap.get('ift3_desc'), status: columnMap.get('ift3_status'), start: columnMap.get('ift3_start'), end: columnMap.get('ift3_end'), completed: columnMap.get('ift3_completed'), total: columnMap.get('ift3_total'), percent: columnMap.get('ift3_percent'), integration: columnMap.get('integration3') },
-          { num: 4, desc: columnMap.get('ift4_desc'), status: columnMap.get('ift4_status'), start: columnMap.get('ift4_start'), end: columnMap.get('ift4_end'), completed: columnMap.get('ift4_completed'), total: columnMap.get('ift4_total'), percent: columnMap.get('ift4_percent'), integration: columnMap.get('integration4') },
-          { num: 5, desc: columnMap.get('ift5_desc'), status: columnMap.get('ift5_status'), start: columnMap.get('ift5_start'), end: columnMap.get('ift5_end'), completed: columnMap.get('ift5_completed'), total: columnMap.get('ift5_total'), percent: columnMap.get('ift5_percent'), integration: columnMap.get('integration5') }
-        ];
-        
-        for (const ift of iftData) {
-          const description = ift.desc ? String(getValue(row, ift.desc) || '') : '';
-          if (!description && !ift.status && !ift.start && !ift.total) continue;
+        for (let stageNum = 1; stageNum <= maxStages; stageNum++) {
+          const descKey = `stage${stageNum}_desc`;
+          const desc = columnMap.get(descKey) ? String(getValue(row, columnMap.get(descKey)) || '') : '';
           
-          const status = ift.status ? String(getValue(row, ift.status) || '') : '';
-          const startDateVal = ift.start ? getValue(row, ift.start) : '';
-          const endDateVal = ift.end ? getValue(row, ift.end) : '';
-          const completedSteps = ift.completed ? getNumber(getValue(row, ift.completed)) : 0;
-          const totalSteps = ift.total ? getNumber(getValue(row, ift.total)) : 0;
-          let percentage = ift.percent ? getPercentage(getValue(row, ift.percent)) : 0;
+          // ИФТ
+          const status = columnMap.get(`stage${stageNum}_status`) ? String(getValue(row, columnMap.get(`stage${stageNum}_status`)) || '') : '';
+          const startDateVal = columnMap.get(`stage${stageNum}_start`) ? getValue(row, columnMap.get(`stage${stageNum}_start`)) : '';
+          const endDateVal = columnMap.get(`stage${stageNum}_end`) ? getValue(row, columnMap.get(`stage${stageNum}_end`)) : '';
+          const completedSteps = columnMap.get(`stage${stageNum}_completed`) ? getNumber(getValue(row, columnMap.get(`stage${stageNum}_completed`))) : 0;
+          const totalSteps = columnMap.get(`stage${stageNum}_total`) ? getNumber(getValue(row, columnMap.get(`stage${stageNum}_total`))) : 0;
+          let percentage = columnMap.get(`stage${stageNum}_percent`) ? getPercentage(getValue(row, columnMap.get(`stage${stageNum}_percent`))) : 0;
+          const integrationType = columnMap.get(`stage${stageNum}_integration`) ? String(getValue(row, columnMap.get(`stage${stageNum}_integration`)) || '') : '';
           
           if (percentage === 0 && totalSteps > 0 && completedSteps > 0) {
             percentage = (completedSteps / totalSteps) * 100;
           }
           
-          // 🆕 Чтение интеграции с поддержкой фразы "Внешники не требуются"
-          let integrationType = '';
-          if (ift.integration) {
-            const rawValue = String(getValue(row, ift.integration) || '').trim();
-            if (rawValue.includes('Внутри ERP') || rawValue.includes('Внешники не требуются')) {
-              integrationType = 'Внутри ERP'; // картинка img1.jpg
-            }
-            else if (rawValue.includes('С внешниками')) {
-              integrationType = 'С внешниками'; // картинка img2.jpg
-            }
-            else if (rawValue.includes('В СП внешники не требуются')) {
-              integrationType = 'В СП внешники не требуются'; // картинка img3.jpg
-            }
+          const hasIftData = desc || status || startDateVal || endDateVal || totalSteps > 0;
+          
+          if (hasIftData) {
+            iftStages.push({
+              id: `${chainName}_${processName}_ИФТ${stageNum}`,
+              name: `ИФТ${stageNum}`,
+              description: desc,
+              status: status,
+              startDate: startDateVal ? formatDate(startDateVal) : '',
+              endDate: endDateVal ? formatDate(endDateVal) : '',
+              totalSteps: totalSteps,
+              completedSteps: completedSteps,
+              percentage: percentage,
+              integrationType: integrationType,
+              stageNumber: stageNum,
+            });
           }
           
-          console.log(`ИФТ${ift.num}: completed=${completedSteps}, total=${totalSteps}, percentFromExcel=${ift.percent ? getValue(row, ift.percent) : 'no column'}, calculated=${percentage}, integration=${integrationType}`);
-          iftStages.push({
-            id: `${chainName}_${processName}_ИФТ${ift.num}`,
-            name: `ИФТ${ift.num}`,
-            description: description,
-            status: status,
-            startDate: startDateVal ? formatDate(startDateVal) : '',
-            endDate: endDateVal ? formatDate(endDateVal) : '',
-            totalSteps: totalSteps,
-            completedSteps: completedSteps,
-            percentage: percentage,
-            integrationType: integrationType
-          });
-        }
-        
-        // ПСИ (добавляем только если есть данные)
-        const psiDesc = columnMap.get('psi_desc');
-        const psiStart = columnMap.get('psi_start');
-        const psiEnd = columnMap.get('psi_end');
-        const psiCompleted = columnMap.get('psi_completed');
-        const psiTotal = columnMap.get('psi_total');
-        const psiPercent = columnMap.get('psi_percent');
-        const psiStatus = columnMap.get('psi_status');
-        
-        const psiDescription = psiDesc ? String(getValue(row, psiDesc) || '') : '';
-        const hasPsiData = psiDescription || psiStart || psiTotal || psiEnd;
-        
-        if (hasPsiData) {
-          const status = psiStatus ? String(getValue(row, psiStatus) || '') : '';
-          const startDateVal = psiStart ? getValue(row, psiStart) : '';
-          const endDateVal = psiEnd ? getValue(row, psiEnd) : '';
-          const completedSteps = psiCompleted ? getNumber(getValue(row, psiCompleted)) : 0;
-          const totalSteps = psiTotal ? getNumber(getValue(row, psiTotal)) : 0;
-          let percentage = psiPercent ? getPercentage(getValue(row, psiPercent)) : 0;
+          // ⭐ ПСИ - ТОЖЕ ЧИТАЕМ ИНТЕГРАЦИЮ!
+          const psiStatus = columnMap.get(`psi${stageNum}_status`) ? String(getValue(row, columnMap.get(`psi${stageNum}_status`)) || '') : '';
+          const psiStartDateVal = columnMap.get(`psi${stageNum}_start`) ? getValue(row, columnMap.get(`psi${stageNum}_start`)) : '';
+          const psiEndDateVal = columnMap.get(`psi${stageNum}_end`) ? getValue(row, columnMap.get(`psi${stageNum}_end`)) : '';
+          const psiCompletedSteps = columnMap.get(`psi${stageNum}_completed`) ? getNumber(getValue(row, columnMap.get(`psi${stageNum}_completed`))) : 0;
+          const psiTotalSteps = columnMap.get(`psi${stageNum}_total`) ? getNumber(getValue(row, columnMap.get(`psi${stageNum}_total`))) : 0;
+          let psiPercentage = columnMap.get(`psi${stageNum}_percent`) ? getPercentage(getValue(row, columnMap.get(`psi${stageNum}_percent`))) : 0;
+          // ⭐ ПСИ ТОЖЕ ЧИТАЕТ ИНТЕГРАЦИЮ
+          const psiIntegrationType = columnMap.get(`stage${stageNum}_integration`) ? String(getValue(row, columnMap.get(`stage${stageNum}_integration`)) || '') : '';
           
-          if (percentage === 0 && totalSteps > 0 && completedSteps > 0) {
-            percentage = (completedSteps / totalSteps) * 100;
+          if (psiPercentage === 0 && psiTotalSteps > 0 && psiCompletedSteps > 0) {
+            psiPercentage = (psiCompletedSteps / psiTotalSteps) * 100;
           }
           
-          console.log(`ПСИ: completed=${completedSteps}, total=${totalSteps}, percentage=${percentage}`);
-          iftStages.push({
-            id: `${chainName}_${processName}_ПСИ`,
-            name: 'ПСИ',
-            description: psiDescription,
-            status: status,
-            startDate: startDateVal ? formatDate(startDateVal) : '',
-            endDate: endDateVal ? formatDate(endDateVal) : '',
-            totalSteps: totalSteps,
-            completedSteps: completedSteps,
-            percentage: percentage,
-            integrationType: '' // ПСИ без интеграции
-          });
+          const hasPsiData = psiStatus || psiStartDateVal || psiEndDateVal || psiTotalSteps > 0;
+          
+          if (hasPsiData) {
+            iftStages.push({
+              id: `${chainName}_${processName}_ПСИ${stageNum}`,
+              name: `ПСИ${stageNum}`,
+              description: desc,
+              status: psiStatus,
+              startDate: psiStartDateVal ? formatDate(psiStartDateVal) : '',
+              endDate: psiEndDateVal ? formatDate(psiEndDateVal) : '',
+              totalSteps: psiTotalSteps,
+              completedSteps: psiCompletedSteps,
+              percentage: psiPercentage,
+              integrationType: psiIntegrationType, // ⭐ ТЕПЕРЬ НЕ ПУСТОЙ!
+              stageNumber: stageNum,
+            });
+          }
         }
         
         if (iftStages.length === 0) continue;
         
         const problems = parseProblems(problemsStr, processName, chainName);
-        const hygieneDates = parseHygiene(hygieneStr);
         
         if (!chainsMap.has(chainName)) {
           chainsMap.set(chainName, {
@@ -484,38 +418,32 @@ export const parseExcelFile = (file: File): Promise<Chain[]> => {
         }
         
         const chain = chainsMap.get(chainName)!;
-        
         const existingProcess = chain.processes.find(p => p.name === processName);
+        
+        const processData: Process = {
+          id: `${chainName}_${processName}`,
+          name: processName,
+          shortName: shortName || processName,
+          sp: sp,
+          iftStages: iftStages,
+          problems: problems,
+          hygiene: [],
+          links: {
+            confluence: columnMap.has('confluence') ? String(getValue(row, columnMap.get('confluence')) || '') : undefined,
+            story: columnMap.has('story') ? String(getValue(row, columnMap.get('story')) || '') : undefined,
+          },
+          datePromInside: datePromInside,
+          datePromOutside: datePromOutside,
+        };
+        
         if (existingProcess) {
           existingProcess.iftStages = iftStages;
           existingProcess.problems.push(...problems);
-          if (hygieneDates.length > 0) {
-            existingProcess.hygiene.push({
-              id: `${chainName}_${processName}_hygiene`,
-              processName: processName,
-              chainName: chainName,
-              missedDates: hygieneDates
-            });
-          }
+          existingProcess.sp = sp;
+          existingProcess.datePromInside = datePromInside;
+          existingProcess.datePromOutside = datePromOutside;
         } else {
-          chain.processes.push({
-            id: `${chainName}_${processName}`,
-            name: processName,
-            shortName: shortName,
-            iftStages: iftStages,
-            problems: problems,
-            hygiene: hygieneDates.length > 0 ? [{
-              id: `${chainName}_${processName}_hygiene`,
-              processName: processName,
-              chainName: chainName,
-              missedDates: hygieneDates
-            }] : [],
-            links: {
-              confluence: columnMap.has('confluence') ? String(getValue(row, columnMap.get('confluence')) || '') : undefined,
-              story: columnMap.has('story') ? String(getValue(row, columnMap.get('story')) || '') : undefined,
-              sberChat: columnMap.has('sberChat') ? String(getValue(row, columnMap.get('sberChat')) || '') : undefined
-            }
-          });
+          chain.processes.push(processData);
         }
       }
       

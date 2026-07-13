@@ -20,7 +20,7 @@
 .headerRight {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
@@ -53,7 +53,7 @@
   background: white;
   cursor: pointer;
   color: #1f2937;
-  min-width: 180px;
+  min-width: 160px;
 }
 
 .filterSelect:hover {
@@ -66,6 +66,102 @@
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
 }
 
+/* ⭐ Фильтр по СП */
+.filterDropdown {
+  position: relative;
+}
+
+.filterDropdownButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1f2937;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.filterDropdownButton:hover {
+  background: #f3f4f6;
+  border-color: #3b82f6;
+}
+
+.filterDropdownButton.active {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.dropdownArrow {
+  font-size: 10px;
+  color: #6b7280;
+}
+
+.filterDropdownMenu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 200px;
+  max-height: 250px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 8px 0;
+  z-index: 100;
+}
+
+.filterOption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  font-size: 13px;
+  color: #1f2937;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.filterOption:hover {
+  background: #f9fafb;
+}
+
+.filterOption input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.filterEmptyMessage {
+  padding: 8px 16px;
+  color: #9ca3af;
+  font-style: italic;
+  font-size: 13px;
+}
+
+.clearFiltersButton {
+  padding: 6px 14px;
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #dc2626;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.clearFiltersButton:hover {
+  background: #fecaca;
+}
+
 .tableWrapper {
   overflow-x: auto;
 }
@@ -73,29 +169,26 @@
 .table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 15px; /* увеличен с 13px */
+  font-size: 14px;
 }
 
 .table th {
   text-align: left;
-  padding: 12px 16px; /* увеличен отступ */
+  padding: 12px 16px;
   background: #f9fafb;
   font-weight: 600;
-  font-size: 15px; /* увеличен с 13px */
   color: #374151;
   border-bottom: 2px solid #e5e7eb;
 }
 
 .table td {
-  padding: 12px 16px; /* увеличен отступ */
+  padding: 12px 16px;
   border-bottom: 1px solid #f3f4f6;
   vertical-align: middle;
-  font-size: 15px; /* увеличен с 13px */
 }
 
 .chainCell {
   font-weight: 600;
-  font-size: 15px;
   color: #1f2937;
   background: #fafafa;
   vertical-align: top;
@@ -103,13 +196,17 @@
 
 .processCell {
   color: #4b5563;
-  font-size: 15px;
+}
+
+.spCell {
+  color: #6b7280;
+  font-size: 13px;
 }
 
 .dateCell {
   color: #6b7280;
   font-family: monospace;
-  font-size: 14px; /* увеличен с 12px */
+  font-size: 13px;
 }
 
 .forecastNa {
@@ -124,7 +221,7 @@
 
 .statusCell {
   font-weight: 600;
-  font-size: 16px; /* увеличен с 14px */
+  font-size: 15px;
 }
 
 .statusCell.green {
@@ -147,14 +244,14 @@
   color: #9ca3af;
   font-style: italic;
   font-weight: 600;
-  font-size: 16px; /* увеличен с 14px */
+  font-size: 15px;
 }
 
 .empty {
   text-align: center;
   padding: 40px;
   color: #9ca3af;
-  font-size: 15px; /* увеличен с 14px */
+  font-size: 15px;
 }
 
 /* Адаптивность */
@@ -184,28 +281,38 @@
   .filterSelect {
     flex: 1;
     min-width: 120px;
-    font-size: 14px;
   }
   
-  .table {
-    font-size: 14px;
+  .filterDropdown {
+    width: 100%;
+  }
+  
+  .filterDropdownButton {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .filterDropdownMenu {
+    right: 0;
+    left: 0;
+    min-width: 100%;
   }
   
   .table th,
   .table td {
-    padding: 10px 12px;
-    font-size: 14px;
+    padding: 8px 10px;
+    font-size: 13px;
   }
   
   .statusCell {
-    font-size: 15px;
+    font-size: 14px;
   }
   
   .statusNa {
-    font-size: 15px;
+    font-size: 14px;
   }
   
   .dateCell {
-    font-size: 13px;
+    font-size: 12px;
   }
 }
