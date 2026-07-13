@@ -399,9 +399,6 @@ const Dashboard = () => {
           <h2 className={styles.sectionTitle}>📋 Список цепочек</h2>
           <div className={styles.chainsGrid}>
             {summaries.map(summary => {
-              const insideColor = getPercentColor(summary.avgIftInsideCompletion);
-              const outsideColor = getPercentColor(summary.avgIftOutsideCompletion);
-              const psiColor = getPercentColor(summary.avgPsiCompletion);
               return (
                 <div 
                   key={summary.id} 
